@@ -5,7 +5,7 @@ import { useVault } from '@/lib/vaultContext';
 import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function UnlockScreen() {
-  const { userEmail, unlockVault } = useVault();
+  const { userEmail, unlockVault, resetVaultLocal } = useVault();
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
@@ -101,6 +101,20 @@ export default function UnlockScreen() {
             )}
           </button>
         </form>
+
+        <div className="text-center pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              if (confirm('Voulez-vous changer de compte ? Vos identifiants locaux seront réinitialisés sur cet appareil.')) {
+                resetVaultLocal();
+              }
+            }}
+            className="text-xs text-gray-500 hover:text-vault-600 dark:text-gray-400 dark:hover:text-vault-400 font-medium transition"
+          >
+            Ce n’est pas votre compte ? <span className="underline">Changer de compte</span>
+          </button>
+        </div>
 
         <div className="pt-2 border-t border-gray-100 dark:border-slate-700 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1.5">
           <ShieldCheck className="w-4 h-4 text-vault-600" />
