@@ -269,7 +269,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       const finalEncryptedList: EncryptedVaultItem[] = [];
       for (const item of mergedList) {
         const payloadString = JSON.stringify({ name: item.name, data: item.data });
-        const encryptedPayload = await encryptData(payloadString, key);
+        const encryptedPayload = await encryptData(payloadString, actualKey);
         finalEncryptedList.push({
           id: item.id,
           type: item.type,
