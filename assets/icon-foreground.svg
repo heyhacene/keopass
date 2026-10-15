@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="keoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+    <linearGradient id="kGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#d1fae5" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#10b981" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Arrière-plan arrondi moderne -->
+  <rect width="512" height="512" rx="128" fill="#090d16" />
+
+  <!-- Bouclier Keo sécurisé -->
+  <path d="M256 64 C360 96 424 116 424 116 C424 300 356 416 256 448 C156 416 88 300 88 116 C88 116 152 96 256 64 Z" fill="url(#keoGrad)" filter="url(#glow)" />
+
+  <!-- Anneau supérieur de cadenas / voûte (Anse) -->
+  <path d="M212 196 V164 C212 139.7 231.7 120 256 120 C280.3 120 300 139.7 300 164 V196" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" />
+
+  <!-- Lettre K stylisée au centre du bouclier (Keo) -->
+  <path d="M204 196 V344 M204 270 L304 186 M236 244 L312 344" fill="none" stroke="url(#kGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Petit trou de serrure discret -->
+  <circle cx="218" cy="270" r="6" fill="#047857" />
+</svg>
