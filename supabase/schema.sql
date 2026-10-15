@@ -1,5 +1,5 @@
 -- ========================================================
--- SCHÉMA DU COFFRE-FORT ZERO-KNOWLEDGE PASSVAULT
+-- SCHÉMA DU COFFRE-FORT ZERO-KNOWLEDGE KEOPASS (SUITE KEO)
 -- ========================================================
 
 CREATE TABLE IF NOT EXISTS public.vault_items (

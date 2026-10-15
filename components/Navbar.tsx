@@ -46,7 +46,7 @@ export default function Navbar({
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="font-extrabold text-base tracking-tight text-gray-900 dark:text-white">
-                PassVault
+                KeoPass
               </h1>
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-vault-100 dark:bg-vault-950/80 text-vault-700 dark:text-vault-300">
                 AES-256

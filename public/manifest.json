@@ -1,7 +1,7 @@
 {
-  "name": "PassVault",
-  "short_name": "PassVault",
-  "description": "Coffre-fort de mots de passe Zero-Knowledge sécurisé",
+  "name": "KeoPass",
+  "short_name": "KeoPass",
+  "description": "Coffre-fort de mots de passe Zero-Knowledge sécurisé de la suite Keo",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",

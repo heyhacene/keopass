@@ -60,7 +60,7 @@ export default function SetupVaultScreen() {
             <ShieldCheck className="w-8 h-8" />
           </div>
           <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white">
-            Bienvenue sur PassVault
+            Bienvenue sur KeoPass
           </h2>
           <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             Créez votre mot de passe maître pour initialiser votre coffre-fort chiffré de bout en bout

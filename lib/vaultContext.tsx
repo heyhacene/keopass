@@ -26,8 +26,8 @@ interface VaultContextType {
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_VAULT_KEY = 'passvault_encrypted_items_v1';
-const LOCAL_STORAGE_CONFIG_KEY = 'passvault_config_v1';
+const LOCAL_STORAGE_VAULT_KEY = 'keopass_encrypted_items_v1';
+const LOCAL_STORAGE_CONFIG_KEY = 'keopass_config_v1';
 
 export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -439,7 +439,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
     if (includePlaintext) {
       content = JSON.stringify(items, null, 2);
-      fileName = `passvault_backup_plaintext_${new Date().toISOString().slice(0, 10)}.json`;
+      fileName = `keopass_backup_plaintext_${new Date().toISOString().slice(0, 10)}.json`;
     } else {
       const encryptedStr = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY) || '[]';
       content = JSON.stringify({
@@ -447,7 +447,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         email: userEmail,
         vault: JSON.parse(encryptedStr),
       }, null, 2);
-      fileName = `passvault_backup_encrypted_${new Date().toISOString().slice(0, 10)}.json`;
+      fileName = `keopass_backup_encrypted_${new Date().toISOString().slice(0, 10)}.json`;
     }
 
     const blob = new Blob([content], { type: 'application/json' });

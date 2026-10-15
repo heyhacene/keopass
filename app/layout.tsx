@@ -3,8 +3,8 @@ import './globals.css';
 import { VaultProvider } from '@/lib/vaultContext';
 
 export const metadata: Metadata = {
-  title: 'PassVault — Coffre-fort de mots de passe Zero-Knowledge',
-  description: 'Gestionnaire de mots de passe sécurisé multiplateforme avec chiffrement de bout en bout AES-256 et générateur intégré.',
+  title: 'KeoPass — Coffre-fort de mots de passe Zero-Knowledge',
+  description: 'Gestionnaire de mots de passe et coffre-fort sécurisé multiplateforme de la suite Keo avec chiffrement AES-256.',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',

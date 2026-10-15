@@ -171,7 +171,7 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
         {/* FOOTER */}
         <div className="p-3 bg-gray-50 dark:bg-slate-850 border-t border-gray-100 dark:border-slate-700 text-center">
           <p className="text-[11px] text-gray-400 dark:text-slate-500">
-            PassVault v1.0.0 • Chiffrement Zero-Knowledge AES-256-GCM
+            KeoPass v1.0.0 • Chiffrement Zero-Knowledge AES-256-GCM
           </p>
         </div>
       </div>

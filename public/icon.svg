@@ -1,17 +1,31 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22c55e" />
-      <stop offset="100%" stop-color="#15803d" />
+    <linearGradient id="keoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#047857" />
     </linearGradient>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#16a34a" flood-opacity="0.35" />
+    <linearGradient id="kGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#d1fae5" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#10b981" flood-opacity="0.3" />
     </filter>
   </defs>
-  <rect width="512" height="512" rx="128" fill="#0f172a" />
-  <path d="M256 64 C352 96 416 112 416 112 C416 288 352 400 256 448 C160 400 96 288 96 112 C96 112 160 96 256 64 Z" fill="url(#shieldGrad)" filter="url(#shadow)" />
-  <!-- Cadenas intérieur -->
-  <path d="M216 220 V184 C216 161.9 233.9 144 256 144 C278.1 144 296 161.9 296 184 V220 H304 C312.8 220 320 227.2 320 236 V324 C320 332.8 312.8 340 304 340 H208 C199.2 340 192 332.8 192 324 V236 C192 227.2 199.2 220 208 220 H216 Z M240 220 H272 V184 C272 175.2 264.8 168 256 168 C247.2 168 240 175.2 240 184 V220 Z" fill="#ffffff" />
-  <circle cx="256" cy="272" r="10" fill="#15803d" />
-  <path d="M253 276 L251 304 H261 L259 276 Z" fill="#15803d" />
+
+  <!-- Arrière-plan arrondi moderne -->
+  <rect width="512" height="512" rx="128" fill="#090d16" />
+
+  <!-- Bouclier Keo sécurisé -->
+  <path d="M256 64 C360 96 424 116 424 116 C424 300 356 416 256 448 C156 416 88 300 88 116 C88 116 152 96 256 64 Z" fill="url(#keoGrad)" filter="url(#glow)" />
+
+  <!-- Anneau supérieur de cadenas / voûte (Anse) -->
+  <path d="M212 196 V164 C212 139.7 231.7 120 256 120 C280.3 120 300 139.7 300 164 V196" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" />
+
+  <!-- Lettre K stylisée au centre du bouclier (Keo) -->
+  <path d="M204 196 V344 M204 270 L304 186 M236 244 L312 344" fill="none" stroke="url(#kGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+
+  <!-- Petit trou de serrure discret -->
+  <circle cx="218" cy="270" r="6" fill="#047857" />
 </svg>

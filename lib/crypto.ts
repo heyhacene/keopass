@@ -55,7 +55,7 @@ export async function deriveKeys(
     ['deriveBits', 'deriveKey']
   );
 
-  const salt = enc.encode(saltStr.trim().toLowerCase() + '_passvault_salt_v1');
+  const salt = enc.encode(saltStr.trim().toLowerCase() + '_keopass_salt_v1');
 
   // 1. Dérive 512 bits : 256 bits pour la clé de chiffrement + 256 bits pour le hash d'authentification
   const derivedBits = await crypto.subtle.deriveBits(

@@ -1,4 +1,4 @@
-# 🛡️ PassVault
+# 🛡️ KeoPass (Suite Keo)
 
 > Gestionnaire de mots de passe multiplateforme et coffre-fort chiffré de bout en bout (Zero-Knowledge AES-256).
 
