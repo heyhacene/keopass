@@ -14,6 +14,10 @@ import {
   AlertTriangle,
   Info,
   RefreshCw,
+  Coffee,
+  Heart,
+  LifeBuoy,
+  ExternalLink,
 } from 'lucide-react';
 
 interface VaultSettingsModalProps {
@@ -191,6 +195,33 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
                 </div>
               </div>
             </button>
+          </div>
+
+          {/* SOUTIEN DU PROJET & ASSISTANCE */}
+          <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
+            <h4 className="text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-wider">
+              Soutien & Assistance
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <a
+                href="https://ko-fi.com/keo_app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 px-3 rounded-2xl bg-[#FF5E5B] hover:bg-[#e04f4c] text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+              >
+                <Coffee className="w-4 h-4" />
+                <span>Offrir un café (Ko-fi)</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+              </a>
+
+              <a
+                href="mailto:heyhacene@gmail.com?subject=%5BKeoPass%5D%20Assistance%20%26%20Feedback"
+                className="w-full py-2.5 px-3 rounded-2xl bg-gray-50 dark:bg-slate-900 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-800 dark:text-white border border-gray-200 dark:border-slate-700 text-xs font-bold transition flex items-center justify-center gap-2"
+              >
+                <LifeBuoy className="w-4 h-4 text-vault-600 dark:text-vault-400" />
+                <span>Aide & Retours</span>
+              </a>
+            </div>
           </div>
 
           {/* DISSOCIER CET APPAREIL */}

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Dégradé Signature Keo Suite : Émeraude vers Cyan Électrique -->
+    <linearGradient id="keoSpine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+
+    <linearGradient id="keoUpperArm" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="60%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#38bdf8" />
+    </linearGradient>
+
+    <linearGradient id="keoLowerArm" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#6366f1" />
+    </linearGradient>
+
+    <!-- Halo d'ambiance néon moderne -->
+    <filter id="keoGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="24" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <linearGradient id="cardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#04070e" />
+    </linearGradient>
+
+    <linearGradient id="cardBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155" stop-opacity="0.8" />
+      <stop offset="50%" stop-color="#1e293b" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Arrière-plan Squircle Dark Premium -->
+  <rect x="8" y="8" width="496" height="496" rx="124" fill="url(#cardBg)" stroke="url(#cardBorder)" stroke-width="4" />
+
+  <!-- Lueur de fond diffuse -->
+  <circle cx="280" cy="256" r="140" fill="#06b6d4" opacity="0.12" filter="url(#keoGlow)" />
+  <circle cx="180" cy="220" r="120" fill="#10b981" opacity="0.15" filter="url(#keoGlow)" />
+
+  <!-- Monogramme K Stylisé Géométrique & Dynamique -->
+  <g filter="drop-shadow(0 16px 24px rgba(0, 0, 0, 0.5))">
+    <!-- Colonne vertébrale gauche (Stabilité / Fondation) -->
+    <rect x="136" y="116" width="52" height="280" rx="26" fill="url(#keoSpine)" />
+
+    <!-- Branche inférieure (Sécurité & Profondeur / Bleu Cyan vers Indigo) -->
+    <path d="M 216 264 L 334 382 C 346 394 366 394 378 382 C 390 370 390 350 378 338 L 268 228 Z" 
+          fill="url(#keoLowerArm)" />
+
+    <!-- Branche supérieure (Vitesse, Innovation, Clarté / Émeraude vers Cyan) -->
+    <path d="M 176 252 L 330 128 C 342 118 360 118 372 130 C 384 142 384 160 372 172 L 244 286 Z" 
+          fill="url(#keoUpperArm)" />
+
+    <!-- Noeud de connexion centrale lumineux (Le point de convergence de la suite) -->
+    <circle cx="218" cy="268" r="10" fill="#ffffff" opacity="0.9" filter="drop-shadow(0 0 8px #38bdf8)" />
+  </g>
+</svg>
