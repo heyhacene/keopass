@@ -14,6 +14,8 @@ interface VaultContextType {
   userEmail: string;
   autoLockMinutes: number;
   setupVault: (masterPassword: string, email: string) => Promise<boolean>;
+  loginVault: (masterPassword: string, email: string) => Promise<{ success: boolean; error?: string }>;
+  resetVaultLocal: () => void;
   unlockVault: (masterPassword: string) => Promise<boolean>;
   lockVault: () => void;
   addItem: (item: Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -205,6 +207,10 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       setIsConfigured(true);
       setIsUnlocked(true);
       setItems([]);
+
+      if (isSupabaseConfigured()) {
+        await syncWithCloud(encryptionKey);
+      }
       return true;
     } catch (err) {
       console.error('Erreur configuration coffre:', err);
@@ -212,6 +218,73 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  /**
+   * Connexion à un coffre existant sur un nouvel appareil
+   */
+  const loginVault = async (masterPassword: string, email: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true);
+      const cleanEmail = email.trim().toLowerCase();
+      const { authHash, encryptionKey } = await deriveKeys(masterPassword, cleanEmail);
+
+      // Si Supabase est configuré, vérification des identifiants
+      if (isSupabaseConfigured()) {
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email: cleanEmail,
+          password: authHash,
+        });
+        if (signInErr) {
+          return { success: false, error: 'Identifiants invalides ou coffre introuvable dans le cloud.' };
+        }
+      }
+
+      encryptionKeyRef.current = encryptionKey;
+      authHashRef.current = authHash;
+
+      const config = {
+        configured: true,
+        email: cleanEmail,
+        authHash,
+        createdAt: new Date().toISOString(),
+        autoLockMinutes: 15,
+      };
+
+      localStorage.setItem(LOCAL_STORAGE_CONFIG_KEY, JSON.stringify(config));
+      setUserEmail(cleanEmail);
+      setIsConfigured(true);
+      setIsUnlocked(true);
+
+      // Récupérer et déchiffrer les éléments du cloud
+      if (isSupabaseConfigured()) {
+        await syncWithCloud(encryptionKey);
+      } else {
+        const existingLocal = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
+        if (!existingLocal) {
+          localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify([]));
+          setItems([]);
+        }
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Erreur connexion coffre existant:', err);
+      return { success: false, error: err.message || 'Une erreur est survenue lors de la connexion.' };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Réinitialise les données locales de cet appareil (déconnexion complète de l'appareil)
+   */
+  const resetVaultLocal = () => {
+    localStorage.removeItem(LOCAL_STORAGE_CONFIG_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_VAULT_KEY);
+    lockVault();
+    setIsConfigured(false);
+    setUserEmail('');
   };
 
   /**
@@ -470,6 +543,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         userEmail,
         autoLockMinutes,
         setupVault,
+        loginVault,
+        resetVaultLocal,
         unlockVault,
         lockVault,
         addItem,
