@@ -24,6 +24,7 @@ interface VaultContextType {
   toggleFavorite: (id: string) => Promise<void>;
   setAutoLockMinutes: (minutes: number) => void;
   exportVaultData: (includePlaintext?: boolean) => void;
+  syncNow: () => Promise<void>;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
@@ -130,14 +131,22 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
    * Synchronise les éléments de manière bidirectionnelle avec Supabase
    * (Pousse les éléments locaux manquants et télécharge les éléments du cloud)
    */
-  const syncWithCloud = useCallback(async (key: CryptoKey, email?: string, hash?: string) => {
+  const syncWithCloud = useCallback(async (key?: CryptoKey | null, email?: string, hash?: string) => {
     if (!isSupabaseConfigured()) return;
+    const actualKey = key || encryptionKeyRef.current;
+    if (!actualKey) return;
+
     try {
       setIsSyncing(true);
       let user = (await supabase.auth.getUser()).data.user;
 
-      if (!user && email && hash) {
-        user = await ensureSupabaseAuth(email, hash);
+      const configStr = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_CONFIG_KEY) : null;
+      const config = configStr ? JSON.parse(configStr) : null;
+      const emailToUse = email || userEmail || config?.email;
+      const hashToUse = hash || authHashRef.current || config?.authHash;
+
+      if (!user && emailToUse && hashToUse) {
+        user = await ensureSupabaseAuth(emailToUse, hashToUse);
       }
       if (!user) return;
 
@@ -158,7 +167,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       if (cloudRows) {
         for (const row of cloudRows) {
           try {
-            const rawJson = await decryptData(row.encrypted_payload, key);
+            const rawJson = await decryptData(row.encrypted_payload, actualKey);
             const parsed = JSON.parse(rawJson);
             const item: VaultItem = {
               id: row.id,
@@ -180,14 +189,14 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 3. Lire les éléments stockés en local
-      const localStr = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
+      const localStr = typeof window !== 'undefined' ? localStorage.getItem(LOCAL_STORAGE_VAULT_KEY) : null;
       const localItems: VaultItem[] = [];
       if (localStr) {
         try {
           const encList: EncryptedVaultItem[] = JSON.parse(localStr);
           for (const enc of encList) {
             try {
-              const rawJson = await decryptData(enc.encrypted_payload, key);
+              const rawJson = await decryptData(enc.encrypted_payload, actualKey);
               const parsed = JSON.parse(rawJson);
               localItems.push({
                 id: enc.id,
@@ -237,20 +246,23 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         const rowsToUpsert = [];
         for (const item of itemsToPushToCloud) {
           const payloadString = JSON.stringify({ name: item.name, data: item.data });
-          const encryptedPayload = await encryptData(payloadString, key);
+          const encryptedPayload = await encryptData(payloadString, actualKey);
           rowsToUpsert.push({
             id: item.id,
             user_id: user.id,
             type: item.type,
             encrypted_payload: encryptedPayload,
-            favorite: item.favorite,
+            favorite: item.favorite || false,
             folder: item.folder || 'personal',
-            created_at: item.createdAt,
-            updatedAt: item.updatedAt,
+            created_at: item.createdAt || new Date().toISOString(),
+            updated_at: item.updatedAt || new Date().toISOString(),
             deleted_at: item.deletedAt || null,
           });
         }
-        await supabase.from('vault_items').upsert(rowsToUpsert);
+        const { error: upsertErr } = await supabase.from('vault_items').upsert(rowsToUpsert);
+        if (upsertErr) {
+          console.error('Erreur upsert cloud Supabase:', upsertErr);
+        }
       }
 
       // 6. Sauvegarder la liste fusionnée dans le localStorage chiffré
@@ -624,6 +636,12 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     URL.revokeObjectURL(url);
   };
 
+  const syncNow = async () => {
+    if (encryptionKeyRef.current) {
+      await syncWithCloud(encryptionKeyRef.current);
+    }
+  };
+
   return (
     <VaultContext.Provider
       value={{
@@ -645,6 +663,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         toggleFavorite,
         setAutoLockMinutes,
         exportVaultData,
+        syncNow,
       }}
     >
       {children}

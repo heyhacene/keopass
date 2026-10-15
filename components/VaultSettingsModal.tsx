@@ -13,6 +13,7 @@ import {
   LogOut,
   AlertTriangle,
   Info,
+  RefreshCw,
 } from 'lucide-react';
 
 interface VaultSettingsModalProps {
@@ -28,6 +29,7 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
     exportVaultData,
     isSyncing,
     resetVaultLocal,
+    syncNow,
   } = useVault();
 
   if (!isOpen) return null;
@@ -69,21 +71,35 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
             <div className="p-3.5 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-150 dark:border-slate-700 flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-gray-900 dark:text-white">{userEmail}</p>
-                <div className="flex items-center gap-1.5 text-[11px]">
-                  {isSupabaseConfigured() ? (
-                    <>
-                      <Cloud className="w-3.5 h-3.5 text-vault-600 dark:text-vault-400" />
-                      <span className="text-vault-600 dark:text-vault-400 font-semibold">
-                        {isSyncing ? 'Synchronisation...' : 'Synchronisé (Supabase)'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <CloudOff className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-amber-600 dark:text-amber-400 font-semibold">
-                        Mode local (hors-ligne)
-                      </span>
-                    </>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 text-[11px]">
+                    {isSupabaseConfigured() ? (
+                      <>
+                        <Cloud className="w-3.5 h-3.5 text-vault-600 dark:text-vault-400" />
+                        <span className="text-vault-600 dark:text-vault-400 font-semibold">
+                          {isSyncing ? 'Synchronisation...' : 'Synchronisé (Supabase)'}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <CloudOff className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                          Mode local (hors-ligne)
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {isSupabaseConfigured() && (
+                    <button
+                      type="button"
+                      onClick={() => syncNow()}
+                      disabled={isSyncing}
+                      className="px-2.5 py-1 bg-vault-600/15 hover:bg-vault-600/25 border border-vault-500/30 text-vault-600 dark:text-vault-400 rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                      title="Forcer la synchronisation avec le Cloud"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                      <span>{isSyncing ? 'En cours...' : 'Synchroniser'}</span>
+                    </button>
                   )}
                 </div>
               </div>
