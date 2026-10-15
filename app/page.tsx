@@ -1,0 +1,466 @@
+'use client';
+
+import React, { useState, useMemo } from 'react';
+import { useVault } from '@/lib/vaultContext';
+import SetupVaultScreen from '@/components/SetupVaultScreen';
+import UnlockScreen from '@/components/UnlockScreen';
+import Navbar from '@/components/Navbar';
+import VaultItemCard from '@/components/VaultItemCard';
+import VaultItemModal from '@/components/VaultItemModal';
+import PasswordGenerator from '@/components/PasswordGenerator';
+import VaultSettingsModal from '@/components/VaultSettingsModal';
+import { VaultItem, VaultItemType } from '@/types/vault';
+import {
+  ShieldCheck,
+  KeyRound,
+  CreditCard,
+  FileText,
+  Star,
+  Clock,
+  Plus,
+  Search,
+  Sparkles,
+  Lock,
+  Layers,
+  X,
+  AlertCircle,
+} from 'lucide-react';
+
+type FilterCategory = 'all' | 'favorites' | 'login' | 'card' | 'note' | 'totp';
+
+export default function HomePage() {
+  const { isConfigured, isUnlocked, loading, items } = useVault();
+
+  const [activeCategory, setActiveCategory] = useState<FilterCategory>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedItem, setSelectedItem] = useState<VaultItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalDefaultType, setModalDefaultType] = useState<VaultItemType>('login');
+  const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
+
+  // Bascule du mode clair / sombre
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    if (!darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  };
+
+  // Filtrage et recherche
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // 1. Filtrage par corbeille
+      if (item.deletedAt) return false;
+
+      // 2. Filtrage par catégorie
+      if (activeCategory === 'favorites' && !item.favorite) return false;
+      if (activeCategory === 'login' && item.type !== 'login') return false;
+      if (activeCategory === 'card' && item.type !== 'card') return false;
+      if (activeCategory === 'note' && item.type !== 'note') return false;
+      if (activeCategory === 'totp') {
+        if (item.type !== 'login') return false;
+        if (!(item.data as any).totpSecret) return false;
+      }
+
+      // 3. Recherche textuelle
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase().trim();
+        const matchName = item.name.toLowerCase().includes(query);
+        let matchSub = false;
+
+        if (item.type === 'login') {
+          const d = item.data as any;
+          matchSub =
+            (d.username && d.username.toLowerCase().includes(query)) ||
+            (d.url && d.url.toLowerCase().includes(query)) ||
+            (d.notes && d.notes.toLowerCase().includes(query));
+        } else if (item.type === 'card') {
+          const d = item.data as any;
+          matchSub =
+            (d.cardholderName && d.cardholderName.toLowerCase().includes(query)) ||
+            (d.cardNumber && d.cardNumber.includes(query));
+        } else if (item.type === 'note') {
+          const d = item.data as any;
+          matchSub = d.content && d.content.toLowerCase().includes(query);
+        }
+
+        return matchName || matchSub;
+      }
+
+      return true;
+    });
+  }, [items, activeCategory, searchQuery]);
+
+  // Compteurs par catégorie
+  const counts = useMemo(() => {
+    const activeItems = items.filter((i) => !i.deletedAt);
+    return {
+      all: activeItems.length,
+      favorites: activeItems.filter((i) => i.favorite).length,
+      login: activeItems.filter((i) => i.type === 'login').length,
+      card: activeItems.filter((i) => i.type === 'card').length,
+      note: activeItems.filter((i) => i.type === 'note').length,
+      totp: activeItems.filter((i) => i.type === 'login' && (i.data as any).totpSecret).length,
+    };
+  }, [items]);
+
+  // État de chargement initial
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-slate-900 text-gray-500">
+        <div className="w-12 h-12 rounded-2xl bg-vault-600/20 text-vault-600 flex items-center justify-center animate-pulse mb-3">
+          <ShieldCheck className="w-7 h-7" />
+        </div>
+        <p className="text-xs font-semibold">Initialisation de l’environnement sécurisé...</p>
+      </div>
+    );
+  }
+
+  // 1. Si aucun coffre n'est configuré : écran d'onboarding
+  if (!isConfigured) {
+    return <SetupVaultScreen />;
+  }
+
+  // 2. Si le coffre est configuré mais verrouillé : écran de déverrouillage
+  if (!isUnlocked) {
+    return <UnlockScreen />;
+  }
+
+  // 3. Coffre déverrouillé : Interface complète
+  const handleOpenAdd = (type: VaultItemType = 'login') => {
+    setSelectedItem(null);
+    setModalDefaultType(type);
+    setIsModalOpen(true);
+  };
+
+  const handleSelectItem = (item: VaultItem) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors">
+      <Navbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onOpenAddModal={() => handleOpenAdd('login')}
+        onOpenGeneratorModal={() => setIsGeneratorModalOpen(true)}
+        onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        darkMode={darkMode}
+        onToggleDarkMode={toggleDarkMode}
+      />
+
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+        {/* BARRE DE RECHERCHE MOBILE */}
+        <div className="sm:hidden mb-4 relative">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher..."
+            className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-2xl text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-vault-500 outline-none"
+          />
+        </div>
+
+        {/* DISPOSITION 2 COLONNES (SIDEBAR + LISTE) SUR DESKTOP */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* SIDEBAR NAVIGATION (DESKTOP) */}
+          <aside className="hidden md:block md:col-span-1 space-y-2">
+            <div className="bg-white dark:bg-slate-800 rounded-3xl p-3 border border-gray-100 dark:border-slate-750 shadow-xs space-y-1">
+              <button
+                type="button"
+                onClick={() => setActiveCategory('all')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'all'
+                    ? 'bg-vault-50 dark:bg-vault-950/50 text-vault-700 dark:text-vault-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Layers className="w-4 h-4" />
+                  <span>Tous les éléments</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.all}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory('favorites')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'favorites'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-amber-500" />
+                  <span>Favoris</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.favorites}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory('login')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'login'
+                    ? 'bg-vault-50 dark:bg-vault-950/50 text-vault-700 dark:text-vault-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-vault-600" />
+                  <span>Identifiants</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.login}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory('card')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'card'
+                    ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-amber-500" />
+                  <span>Cartes bancaires</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.card}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory('note')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'note'
+                    ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-purple-500" />
+                  <span>Notes sécurisées</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.note}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveCategory('totp')}
+                className={`w-full p-2.5 rounded-2xl text-xs font-bold transition flex items-center justify-between ${
+                  activeCategory === 'totp'
+                    ? 'bg-shield-50 dark:bg-shield-950/40 text-shield-700 dark:text-shield-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-750'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-shield-500" />
+                  <span>Codes 2FA</span>
+                </div>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700">
+                  {counts.totp}
+                </span>
+              </button>
+            </div>
+
+            {/* BOUTON D'AJOUT RAPIDE EN SIDEBAR */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => handleOpenAdd('login')}
+                className="w-full py-3 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-sm shadow-vault-600/20"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Ajouter un élément</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* CONTENU PRINCIPAL */}
+          <div className="col-span-1 md:col-span-3 space-y-4">
+            {/* PILLS CATÉGORIES SUR MOBILE */}
+            <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setActiveCategory('all')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                  activeCategory === 'all'
+                    ? 'bg-vault-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Tous ({counts.all})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory('favorites')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                  activeCategory === 'favorites'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Favoris ({counts.favorites})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory('login')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                  activeCategory === 'login'
+                    ? 'bg-vault-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Mots de passe ({counts.login})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory('card')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                  activeCategory === 'card'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Cartes ({counts.card})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory('note')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                  activeCategory === 'note'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Notes ({counts.note})
+              </button>
+            </div>
+
+            {/* EN-TÊTE DE LA LISTE */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-extrabold text-gray-900 dark:text-white capitalize">
+                  {activeCategory === 'all'
+                    ? 'Tous les éléments'
+                    : activeCategory === 'favorites'
+                    ? 'Éléments favoris'
+                    : activeCategory === 'login'
+                    ? 'Identifiants & Mots de passe'
+                    : activeCategory === 'card'
+                    ? 'Cartes bancaires'
+                    : activeCategory === 'note'
+                    ? 'Notes sécurisées'
+                    : 'Codes 2FA (TOTP)'}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {filteredItems.length} élément{filteredItems.length > 1 ? 's' : ''} trouvé{filteredItems.length > 1 ? 's' : ''}
+                </p>
+              </div>
+
+              {/* Raccourci d'ajout sur mobile */}
+              <button
+                type="button"
+                onClick={() => handleOpenAdd('login')}
+                className="md:hidden py-2 px-3 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Ajouter</span>
+              </button>
+            </div>
+
+            {/* LISTE DES CARTES OU ÉTAT VIDE */}
+            {filteredItems.length === 0 ? (
+              <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-gray-100 dark:border-slate-750 text-center space-y-4">
+                <div className="w-14 h-14 rounded-2xl bg-gray-100 dark:bg-slate-700 text-gray-400 dark:text-slate-500 mx-auto flex items-center justify-center">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-sm text-gray-900 dark:text-white">
+                    {searchQuery ? 'Aucun résultat trouvé' : 'Votre coffre est vide'}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    {searchQuery
+                      ? 'Essayez avec un autre mot-clé ou vérifiez la catégorie sélectionnée.'
+                      : 'Commencez à protéger vos comptes en ajoutant votre premier identifiant ou carte bancaire.'}
+                  </p>
+                </div>
+                {!searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => handleOpenAdd('login')}
+                    className="py-2.5 px-5 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-2xl text-xs transition inline-flex items-center gap-1.5 shadow-sm shadow-vault-600/30"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Ajouter mon premier mot de passe</span>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredItems.map((item) => (
+                  <VaultItemCard
+                    key={item.id}
+                    item={item}
+                    onSelect={handleSelectItem}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {/* MODALE DE CRÉATION / ÉDITION D'ÉLÉMENT */}
+      <VaultItemModal
+        item={selectedItem}
+        isOpen={isModalOpen}
+        defaultType={modalDefaultType}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedItem(null);
+        }}
+      />
+
+      {/* MODALE DU GÉNÉRATEUR FLOTTANT */}
+      {isGeneratorModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="max-w-md w-full relative">
+            <button
+              type="button"
+              onClick={() => setIsGeneratorModalOpen(false)}
+              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white rounded-full bg-black/40 transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <PasswordGenerator />
+          </div>
+        </div>
+      )}
+
+      {/* MODALE DES PARAMÈTRES & SAUVEGARDES */}
+      <VaultSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
+    </div>
+  );
+}
