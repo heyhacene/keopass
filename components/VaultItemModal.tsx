@@ -142,8 +142,12 @@ export default function VaultItemModal({
 
     let data: any = {};
     if (itemType === 'login') {
+      let cleanUrl = url.trim();
+      if (cleanUrl && !cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://' + cleanUrl;
+      }
       data = {
-        url: url.trim(),
+        url: cleanUrl,
         username: username.trim(),
         password,
         totpSecret: totpSecret.trim(),
@@ -196,7 +200,7 @@ export default function VaultItemModal({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col shadow-2xl border border-gray-100 dark:border-slate-700 overflow-hidden animate-in fade-in zoom-in-95">
         {/* HEADER MODALE */}
-        <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between shrink-0 bg-gray-50/70 dark:bg-slate-850">
+        <div className="p-4 border-b border-gray-100 dark:border-slate-700 flex items-center justify-between shrink-0 bg-gray-50/70 dark:bg-slate-900">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-2xl bg-vault-100 dark:bg-vault-950/60 text-vault-700 dark:text-vault-400 flex items-center justify-center font-bold">
               {itemType === 'card' && <CreditCard className="w-5 h-5" />}
@@ -259,7 +263,7 @@ export default function VaultItemModal({
         <div className="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
           {/* SÉLECTEUR DE TYPE EN MODE CRÉATION */}
           {!item && isEditing && (
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-100 dark:bg-slate-750 rounded-2xl text-xs font-bold">
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-gray-100 dark:bg-slate-900 rounded-2xl text-xs font-bold">
               <button
                 type="button"
                 onClick={() => setItemType('login')}
@@ -385,10 +389,16 @@ export default function VaultItemModal({
                       Site Web / URL (optionnel)
                     </label>
                     <input
-                      type="url"
-                      placeholder="https://www.google.com"
+                      type="text"
+                      placeholder="ex: leboncoin.fr ou https://..."
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
+                      onBlur={() => {
+                        const trimmed = url.trim();
+                        if (trimmed && !trimmed.startsWith('http://') && !trimmed.startsWith('https://') && trimmed.includes('.')) {
+                          setUrl('https://' + trimmed);
+                        }
+                      }}
                       className="w-full px-3.5 py-2.5 rounded-2xl bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-xs sm:text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-vault-500 outline-none"
                     />
                   </div>
@@ -539,7 +549,7 @@ export default function VaultItemModal({
               {itemType === 'login' && (
                 <>
                   {/* Identifiant */}
-                  <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                  <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-gray-400">Identifiant</span>
                       <p className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-white select-all">
@@ -558,7 +568,7 @@ export default function VaultItemModal({
                   </div>
 
                   {/* Mot de passe */}
-                  <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                  <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-gray-400">Mot de passe</span>
                       <p className="font-mono font-bold text-xs sm:text-sm text-gray-900 dark:text-white select-all">
@@ -599,7 +609,7 @@ export default function VaultItemModal({
 
                   {/* URL */}
                   {url && (
-                    <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] uppercase font-bold text-gray-400">Site Web</span>
                         <p className="text-xs sm:text-sm text-vault-600 dark:text-vault-400 underline truncate max-w-[260px]">
@@ -623,7 +633,7 @@ export default function VaultItemModal({
 
               {itemType === 'card' && (
                 <>
-                  <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                  <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-gray-400">Numéro de carte</span>
                       <p className="font-mono font-bold text-sm text-gray-900 dark:text-white select-all">
@@ -640,13 +650,13 @@ export default function VaultItemModal({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700">
+                    <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Titulaire</span>
                       <p className="font-bold text-xs text-gray-900 dark:text-white uppercase truncate">
                         {cardholderName || 'Non renseigné'}
                       </p>
                     </div>
-                    <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700">
+                    <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
                       <span className="text-[10px] uppercase font-bold text-gray-400">Expiration</span>
                       <p className="font-mono font-bold text-xs text-gray-900 dark:text-white">
                         {expirationMonth}/{expirationYear}
@@ -655,7 +665,7 @@ export default function VaultItemModal({
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                    <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                       <div>
                         <span className="text-[10px] uppercase font-bold text-gray-400">CVV</span>
                         <p className="font-mono font-bold text-xs text-gray-900 dark:text-white">
@@ -681,7 +691,7 @@ export default function VaultItemModal({
                     </div>
 
                     {pin && (
-                      <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
+                      <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700 flex items-center justify-between">
                         <div>
                           <span className="text-[10px] uppercase font-bold text-gray-400">Code PIN</span>
                           <p className="font-mono font-bold text-xs text-gray-900 dark:text-white">
@@ -702,7 +712,7 @@ export default function VaultItemModal({
               )}
 
               {itemType === 'note' && (
-                <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700">
+                <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
                   <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
                     Contenu chiffré
                   </span>
@@ -713,7 +723,7 @@ export default function VaultItemModal({
               )}
 
               {notes && itemType !== 'note' && (
-                <div className="p-3 bg-gray-50 dark:bg-slate-750 rounded-2xl border border-gray-100 dark:border-slate-700">
+                <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
                   <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
                     Notes
                   </span>
@@ -727,7 +737,7 @@ export default function VaultItemModal({
         </div>
 
         {/* FOOTER */}
-        <div className="p-3.5 bg-gray-50 dark:bg-slate-850 border-t border-gray-100 dark:border-slate-700 flex items-center gap-2 shrink-0">
+        <div className="p-3.5 bg-gray-50 dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700 flex items-center gap-2 shrink-0">
           {isEditing ? (
             <>
               <button
