@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KeoPass</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      width: 350px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 13px;
+    }
+    .header {
+      padding: 12px 16px;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+    }
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-badge {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: #16a34a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .brand-name {
+      font-weight: 700;
+      font-size: 14px;
+      color: #ffffff;
+    }
+    .btn-lock {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .btn-lock:hover {
+      color: #ef4444;
+    }
+    .container {
+      padding: 16px;
+    }
+    .input-group {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: white;
+      font-size: 12px;
+      outline: none;
+    }
+    input:focus {
+      border-color: #16a34a;
+    }
+    .btn-primary {
+      width: 100%;
+      padding: 10px;
+      background: #16a34a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.15s ease;
+    }
+    .btn-primary:hover {
+      background: #15803d;
+    }
+    .tab-section {
+      margin-bottom: 12px;
+      padding: 10px;
+      background: #1e293b;
+      border-radius: 10px;
+      border: 1px solid #334155;
+    }
+    .tab-domain {
+      font-weight: 600;
+      color: #4ade80;
+      font-size: 12px;
+    }
+    .account-card {
+      padding: 8px;
+      background: #0f172a;
+      border-radius: 8px;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .account-info {
+      overflow: hidden;
+    }
+    .account-user {
+      font-weight: 600;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .btn-fill {
+      padding: 4px 10px;
+      background: #16a34a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-fill:hover {
+      background: #15803d;
+    }
+    .gen-box {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #334155;
+    }
+    .gen-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .gen-input {
+      font-family: monospace;
+      font-size: 11px;
+      color: #4ade80;
+    }
+    .btn-copy {
+      padding: 6px 10px;
+      background: #334155;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .btn-copy:hover {
+      background: #475569;
+    }
+    .footer-link {
+      display: block;
+      text-align: center;
+      margin-top: 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-decoration: none;
+    }
+    .footer-link:hover {
+      color: #4ade80;
+    }
+    .error-msg {
+      color: #f87171;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-badge">K</div>
+      <span class="brand-name">KeoPass</span>
+    </div>
+    <button id="btnLock" class="btn-lock" title="Verrouiller le coffre" style="display: none;">
+      🔒
+    </button>
+  </div>
+
+  <div class="container">
+    <!-- ÉCRAN DE DÉVERROUILLAGE -->
+    <div id="unlockView">
+      <div class="input-group">
+        <label>Email du coffre</label>
+        <input type="email" id="txtEmail" placeholder="votre.email@exemple.com">
+      </div>
+      <div class="input-group">
+        <label>Mot de passe maître</label>
+        <input type="password" id="txtPassword" placeholder="••••••••">
+      </div>
+      <button id="btnUnlock" class="btn-primary">Déverrouiller KeoPass</button>
+      <div id="unlockError" class="error-msg"></div>
+    </div>
+
+    <!-- ÉCRAN COFFRE DÉVERROUILLÉ -->
+    <div id="vaultView" style="display: none;">
+      <div class="tab-section">
+        <div>Site actuel : <span id="currentDomain" class="tab-domain">...</span></div>
+        <div id="matchingList"></div>
+      </div>
+
+      <!-- GÉNÉRATEUR RAPIDE -->
+      <div class="gen-box">
+        <label>Générateur de mot de passe express</label>
+        <div class="gen-row">
+          <input type="text" id="genResult" class="gen-input" readonly>
+          <button id="btnRefreshGen" class="btn-copy" title="Régénérer">↻</button>
+          <button id="btnCopyGen" class="btn-copy">Copier</button>
+        </div>
+      </div>
+
+      <a href="https://keopass.vercel.app/" target="_blank" class="footer-link">
+        Ouvrir le coffre-fort complet ↗
+      </a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

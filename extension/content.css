@@ -1,0 +1,190 @@
+/* ========================================================
+   KEOPASS BROWSER EXTENSION — CONTENT STYLES
+   ======================================================== */
+
+.keopass-input-badge {
+  position: absolute !important;
+  right: 10px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 6px !important;
+  background: #16a34a !important;
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  z-index: 2147483640 !important;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.4) !important;
+  transition: transform 0.15s ease, background 0.15s ease !important;
+}
+
+.keopass-input-badge:hover {
+  transform: translateY(-50%) scale(1.1) !important;
+  background: #15803d !important;
+}
+
+.keopass-input-badge svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+/* Menu déroulant des comptes */
+.keopass-dropdown-menu {
+  position: absolute !important;
+  width: 260px !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+  z-index: 2147483647 !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  color: #f8fafc !important;
+  overflow: hidden !important;
+}
+
+.keopass-dropdown-header {
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  background: #1e293b !important;
+  border-bottom: 1px solid #334155 !important;
+  color: #94a3b8 !important;
+}
+
+.keopass-dropdown-header strong {
+  color: #4ade80 !important;
+}
+
+.keopass-dropdown-item {
+  padding: 10px 12px !important;
+  cursor: pointer !important;
+  border-bottom: 1px solid #1e293b !important;
+  transition: background 0.15s ease !important;
+}
+
+.keopass-dropdown-item:last-child {
+  border-bottom: none !important;
+}
+
+.keopass-dropdown-item:hover {
+  background: #1e293b !important;
+}
+
+.keopass-item-title {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #f8fafc !important;
+}
+
+.keopass-item-sub {
+  font-size: 11px !important;
+  color: #4ade80 !important;
+  margin-top: 2px !important;
+}
+
+.keopass-dropdown-empty {
+  padding: 12px !important;
+  font-size: 12px !important;
+  color: #94a3b8 !important;
+  text-align: center !important;
+}
+
+/* Bandeau flottant supérieur de proposition d'enregistrement */
+.keopass-save-prompt {
+  position: fixed !important;
+  top: 16px !important;
+  right: 16px !important;
+  max-width: 400px !important;
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  border-left: 4px solid #16a34a !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4) !important;
+  z-index: 2147483647 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  animation: keopassSlideDown 0.3s ease-out !important;
+}
+
+@keyframes keopassSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.keopass-prompt-icon {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  background: rgba(22, 163, 74, 0.2) !important;
+  color: #4ade80 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.keopass-prompt-content {
+  flex: 1 !important;
+}
+
+.keopass-prompt-title {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #ffffff !important;
+}
+
+.keopass-prompt-desc {
+  font-size: 11px !important;
+  color: #94a3b8 !important;
+  margin-top: 2px !important;
+  line-height: 1.4 !important;
+}
+
+.keopass-prompt-actions {
+  display: flex !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+.keopass-btn-save {
+  padding: 6px 12px !important;
+  background: #16a34a !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: background 0.15s ease !important;
+}
+
+.keopass-btn-save:hover {
+  background: #15803d !important;
+}
+
+.keopass-btn-ignore {
+  padding: 6px 10px !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 8px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+}
+
+.keopass-btn-ignore:hover {
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
