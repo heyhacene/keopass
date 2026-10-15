@@ -6,7 +6,8 @@
   "description": "Coffre-fort Zero-Knowledge AES-256 avec saisie et capture automatique de la suite Keo",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

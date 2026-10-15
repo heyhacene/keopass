@@ -191,7 +191,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const authData = await authRes.json();
             volatileAccessToken = authData.access_token;
             volatileUserId = authData.user?.id;
+          } else {
+            // Tentative d'inscription si premier usage avec ce hash
+            try {
+              const signUpRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  apikey: SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                  email: cleanEmail,
+                  password: authHash,
+                }),
+              });
+              if (signUpRes.ok) {
+                const signUpData = await signUpRes.json();
+                volatileAccessToken = signUpData.access_token || signUpData.session?.access_token;
+                volatileUserId = signUpData.user?.id;
+              }
+            } catch (sErr) {
+              console.warn('Erreur tentative signup:', sErr);
+            }
+          }
 
+          if (volatileAccessToken) {
             // Récupérer les éléments depuis Supabase
             const cloudItems = await fetchCloudItems(volatileAccessToken, encryptionKey);
             volatileItems = cloudItems;

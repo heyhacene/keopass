@@ -163,26 +163,45 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeTab = tabs[0];
       if (!activeTab || !activeTab.id) return;
 
-      chrome.scripting.executeScript({
-        target: { tabId: activeTab.id },
-        func: (u, p) => {
-          const pass = document.querySelector('input[type="password"]');
-          if (pass) {
-            pass.value = p;
-            pass.dispatchEvent(new Event('input', { bubbles: true }));
-            pass.dispatchEvent(new Event('change', { bubbles: true }));
+      // 1. Essai via le content script (recommandé et rapide)
+      chrome.tabs.sendMessage(
+        activeTab.id,
+        { action: 'AUTOFILL', username, password },
+        (res) => {
+          if (chrome.runtime.lastError || !res?.success) {
+            // 2. Repli direct via chrome.scripting si le content script n'est pas actif sur l'onglet
+            chrome.scripting.executeScript({
+              target: { tabId: activeTab.id },
+              func: (u, p) => {
+                function setVal(el, val) {
+                  if (!el) return;
+                  try {
+                    const vs = Object.getOwnPropertyDescriptor(el, 'value')?.set;
+                    const proto = Object.getPrototypeOf(el);
+                    const pvs = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+                    if (pvs && vs !== pvs) pvs.call(el, val);
+                    else if (vs) vs.call(el, val);
+                    else el.value = val;
+                  } catch {
+                    el.value = val;
+                  }
+                  el.dispatchEvent(new Event('input', { bubbles: true }));
+                  el.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+
+                const pass = document.querySelector('input[type="password"]');
+                if (pass) setVal(pass, p);
+
+                const form = pass ? (pass.form || pass.closest('form')) : null;
+                const user = (form ? form.querySelector('input[type="email"], input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]') : null) ||
+                  document.querySelector('input[type="email"], input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]');
+                if (user) setVal(user, u);
+              },
+              args: [username, password],
+            });
           }
-          const user = document.querySelector(
-            'input[type="email"], input[type="text"], input[name*="user"], input[name*="login"], input[name*="email"]'
-          );
-          if (user) {
-            user.value = u;
-            user.dispatchEvent(new Event('input', { bubbles: true }));
-            user.dispatchEvent(new Event('change', { bubbles: true }));
-          }
-        },
-        args: [username, password],
-      });
+        }
+      );
     });
   }
 

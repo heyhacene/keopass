@@ -23,7 +23,7 @@
       (response) => {
         if (response && response.matches) {
           matchingLogins = response.matches;
-          attachIcons();
+          scanInputs();
         }
       }
     );
@@ -156,20 +156,66 @@
     }, 50);
   }
 
+  // Déclencheur natif universel compatible avec React, Vue, Angular et Vanilla JS
+  function setNativeValue(element, value) {
+    if (!element) return;
+    try {
+      const valueSetter = Object.getOwnPropertyDescriptor(element, 'value')?.set;
+      const prototype = Object.getPrototypeOf(element);
+      const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value')?.set;
+
+      if (prototypeValueSetter && valueSetter !== prototypeValueSetter) {
+        prototypeValueSetter.call(element, value);
+      } else if (valueSetter) {
+        valueSetter.call(element, value);
+      } else {
+        element.value = value;
+      }
+    } catch {
+      element.value = value;
+    }
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
   // Remplissage sécurisé et déclenchement des événements DOM React/Angular
   function fillCredentials(userInput, passInput, username, password) {
     if (userInput && username) {
-      userInput.value = username;
-      userInput.dispatchEvent(new Event('input', { bubbles: true }));
-      userInput.dispatchEvent(new Event('change', { bubbles: true }));
+      setNativeValue(userInput, username);
     }
 
     if (passInput && password) {
-      passInput.value = password;
-      passInput.dispatchEvent(new Event('input', { bubbles: true }));
-      passInput.dispatchEvent(new Event('change', { bubbles: true }));
+      setNativeValue(passInput, password);
     }
   }
+
+  // Écoute de l'action de remplissage depuis le popup de l'extension
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'AUTOFILL') {
+      const { username, password } = request;
+      const passInput = document.querySelector('input[type="password"]');
+      let userInput = null;
+
+      if (passInput) {
+        const form = passInput.form || passInput.closest('form');
+        if (form) {
+          userInput = form.querySelector(
+            'input[type="email"], input[type="text"], input[autocomplete="username"], input[name*="user"], input[name*="login"], input[name*="email"]'
+          );
+        }
+      }
+
+      if (!userInput) {
+        userInput = document.querySelector(
+          'input[type="email"], input[type="text"], input[autocomplete="username"], input[name*="user"], input[name*="login"], input[name*="email"]'
+        );
+      }
+
+      fillCredentials(userInput, passInput, username, password);
+      sendResponse({ success: true });
+      return true;
+    }
+  });
 
   // Interception de la validation de formulaire (Capture à la frappe)
   function attachSubmitListeners() {
