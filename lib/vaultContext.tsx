@@ -94,76 +94,194 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   }, [isUnlocked, resetAutoLockTimer]);
 
   /**
-   * Synchronise les éléments chiffrés avec Supabase en arrière-plan
+   * Assure la session d'authentification Supabase (Connexion ou Inscription automatique)
    */
-  const syncWithCloud = useCallback(async (key: CryptoKey) => {
+  const ensureSupabaseAuth = async (email: string, authHash: string) => {
+    if (!isSupabaseConfigured()) return null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) return user;
+
+      const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+        email,
+        password: authHash,
+      });
+
+      if (!signInErr && signInData.user) {
+        return signInData.user;
+      }
+
+      // Si le compte a été créé initialement hors-ligne avant la connexion Supabase
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+        email,
+        password: authHash,
+      });
+
+      if (!signUpErr && signUpData.user) {
+        return signUpData.user;
+      }
+    } catch (err) {
+      console.warn('Erreur ensureSupabaseAuth:', err);
+    }
+    return null;
+  };
+
+  /**
+   * Synchronise les éléments de manière bidirectionnelle avec Supabase
+   * (Pousse les éléments locaux manquants et télécharge les éléments du cloud)
+   */
+  const syncWithCloud = useCallback(async (key: CryptoKey, email?: string, hash?: string) => {
     if (!isSupabaseConfigured()) return;
     try {
       setIsSyncing(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      let user = (await supabase.auth.getUser()).data.user;
+
+      if (!user && email && hash) {
+        user = await ensureSupabaseAuth(email, hash);
+      }
       if (!user) return;
 
+      // 1. Récupérer les lignes depuis Supabase
       const { data: cloudRows, error } = await supabase
         .from('vault_items')
         .select('*')
         .eq('user_id', user.id);
 
-      if (error || !cloudRows) return;
+      if (error) {
+        console.warn('Erreur lecture cloud:', error);
+        return;
+      }
 
-      // Déchiffrement des éléments du cloud
+      // 2. Déchiffrement des éléments du cloud
       const decryptedCloudItems: VaultItem[] = [];
-      for (const row of cloudRows) {
-        try {
-          const rawJson = await decryptData(row.encrypted_payload, key);
-          const parsed = JSON.parse(rawJson);
-          decryptedCloudItems.push({
-            id: row.id,
-            type: row.type,
-            name: parsed.name,
-            data: parsed.data,
-            favorite: row.favorite,
-            folder: row.folder as any,
-            createdAt: row.created_at,
-            updatedAt: row.updated_at,
-            deletedAt: row.deleted_at,
-          });
-        } catch (decErr) {
-          console.warn('Erreur déchiffrement cloud:', row.id, decErr);
+      const cloudMap = new Map<string, VaultItem>();
+      if (cloudRows) {
+        for (const row of cloudRows) {
+          try {
+            const rawJson = await decryptData(row.encrypted_payload, key);
+            const parsed = JSON.parse(rawJson);
+            const item: VaultItem = {
+              id: row.id,
+              type: row.type,
+              name: parsed.name,
+              data: parsed.data,
+              favorite: row.favorite,
+              folder: row.folder as any,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at,
+              deletedAt: row.deleted_at,
+            };
+            decryptedCloudItems.push(item);
+            cloudMap.set(item.id, item);
+          } catch (decErr) {
+            console.warn('Erreur déchiffrement cloud:', row.id, decErr);
+          }
         }
       }
 
-      // Fusion avec mise à jour des éléments
-      setItems((currentItems) => {
-        const itemMap = new Map<string, VaultItem>();
-        currentItems.forEach((i) => itemMap.set(i.id, i));
-
-        decryptedCloudItems.forEach((cloudItem) => {
-          const localItem = itemMap.get(cloudItem.id);
-          if (!localItem) {
-            itemMap.set(cloudItem.id, cloudItem);
-          } else {
-            // Prendre la version la plus récente
-            const localTime = new Date(localItem.updatedAt).getTime();
-            const cloudTime = new Date(cloudItem.updatedAt).getTime();
-            if (cloudTime > localTime) {
-              itemMap.set(cloudItem.id, cloudItem);
-            }
+      // 3. Lire les éléments stockés en local
+      const localStr = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
+      const localItems: VaultItem[] = [];
+      if (localStr) {
+        try {
+          const encList: EncryptedVaultItem[] = JSON.parse(localStr);
+          for (const enc of encList) {
+            try {
+              const rawJson = await decryptData(enc.encrypted_payload, key);
+              const parsed = JSON.parse(rawJson);
+              localItems.push({
+                id: enc.id,
+                type: enc.type,
+                name: parsed.name,
+                data: parsed.data,
+                favorite: enc.favorite,
+                folder: enc.folder as any,
+                createdAt: enc.created_at,
+                updatedAt: enc.updated_at,
+                deletedAt: enc.deleted_at,
+              });
+            } catch {}
           }
-        });
+        } catch {}
+      }
 
-        const merged = Array.from(itemMap.values());
-        // Mise en cache locale du résultat fusionné
-        return merged;
+      // 4. Fusionner : repérer les éléments locaux non présents sur le cloud pour les pousser
+      const mergedMap = new Map<string, VaultItem>();
+      const itemsToPushToCloud: VaultItem[] = [];
+
+      // Insérer d'abord les éléments du cloud
+      decryptedCloudItems.forEach((ci) => mergedMap.set(ci.id, ci));
+
+      // Comparer avec le local
+      localItems.forEach((li) => {
+        const ci = mergedMap.get(li.id);
+        if (!ci) {
+          // Présent en local mais pas encore sur le cloud -> on le garde et on le pousse !
+          mergedMap.set(li.id, li);
+          itemsToPushToCloud.push(li);
+        } else {
+          // Conflit : conserver la version la plus récente
+          const localTime = new Date(li.updatedAt).getTime();
+          const cloudTime = new Date(ci.updatedAt).getTime();
+          if (localTime > cloudTime) {
+            mergedMap.set(li.id, li);
+            itemsToPushToCloud.push(li);
+          }
+        }
       });
+
+      const mergedList = Array.from(mergedMap.values());
+
+      // 5. Pousser les nouveaux éléments locaux vers Supabase
+      if (itemsToPushToCloud.length > 0) {
+        const rowsToUpsert = [];
+        for (const item of itemsToPushToCloud) {
+          const payloadString = JSON.stringify({ name: item.name, data: item.data });
+          const encryptedPayload = await encryptData(payloadString, key);
+          rowsToUpsert.push({
+            id: item.id,
+            user_id: user.id,
+            type: item.type,
+            encrypted_payload: encryptedPayload,
+            favorite: item.favorite,
+            folder: item.folder || 'personal',
+            created_at: item.createdAt,
+            updatedAt: item.updatedAt,
+            deleted_at: item.deletedAt || null,
+          });
+        }
+        await supabase.from('vault_items').upsert(rowsToUpsert);
+      }
+
+      // 6. Sauvegarder la liste fusionnée dans le localStorage chiffré
+      const finalEncryptedList: EncryptedVaultItem[] = [];
+      for (const item of mergedList) {
+        const payloadString = JSON.stringify({ name: item.name, data: item.data });
+        const encryptedPayload = await encryptData(payloadString, key);
+        finalEncryptedList.push({
+          id: item.id,
+          type: item.type,
+          encrypted_payload: encryptedPayload,
+          favorite: item.favorite,
+          folder: item.folder,
+          created_at: item.createdAt,
+          updated_at: item.updatedAt,
+          deleted_at: item.deletedAt,
+        });
+      }
+      localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify(finalEncryptedList));
+
+      // 7. Mettre à jour les données dans l'interface
+      setItems(mergedList);
     } catch (err) {
-      console.warn('Erreur synchro cloud:', err);
+      console.warn('Erreur synchro cloud bidirectionnelle:', err);
     } finally {
       setIsSyncing(false);
     }
   }, []);
 
   /**
-   * Initialisation d'un tout nouveau coffre-fort
+   * Initialisation ou création de coffre
    */
   const setupVault = async (masterPassword: string, email: string): Promise<boolean> => {
     try {
@@ -174,22 +292,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       encryptionKeyRef.current = encryptionKey;
       authHashRef.current = authHash;
 
-      // Inscription ou connexion Supabase avec authHash
       if (isSupabaseConfigured()) {
-        try {
-          const { error: signUpErr } = await supabase.auth.signUp({
-            email: cleanEmail,
-            password: authHash,
-          });
-          if (signUpErr && signUpErr.message.includes('already registered')) {
-            await supabase.auth.signInWithPassword({
-              email: cleanEmail,
-              password: authHash,
-            });
-          }
-        } catch (authErr) {
-          console.warn('Erreur auth Supabase:', authErr);
-        }
+        await ensureSupabaseAuth(cleanEmail, authHash);
       }
 
       const config = {
@@ -201,16 +305,21 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       };
 
       localStorage.setItem(LOCAL_STORAGE_CONFIG_KEY, JSON.stringify(config));
-      localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify([]));
-
       setUserEmail(cleanEmail);
       setIsConfigured(true);
       setIsUnlocked(true);
-      setItems([]);
 
+      // Si le compte avait déjà des éléments sur le cloud, les récupérer
       if (isSupabaseConfigured()) {
-        await syncWithCloud(encryptionKey);
+        await syncWithCloud(encryptionKey, cleanEmail, authHash);
+      } else {
+        const existingLocal = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
+        if (!existingLocal) {
+          localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify([]));
+          setItems([]);
+        }
       }
+
       return true;
     } catch (err) {
       console.error('Erreur configuration coffre:', err);
@@ -229,14 +338,11 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       const cleanEmail = email.trim().toLowerCase();
       const { authHash, encryptionKey } = await deriveKeys(masterPassword, cleanEmail);
 
-      // Si Supabase est configuré, vérification des identifiants
+      // Assurer l'authentification Supabase
       if (isSupabaseConfigured()) {
-        const { error: signInErr } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: authHash,
-        });
-        if (signInErr) {
-          return { success: false, error: 'Identifiants invalides ou coffre introuvable dans le cloud.' };
+        const user = await ensureSupabaseAuth(cleanEmail, authHash);
+        if (!user) {
+          return { success: false, error: 'Identifiants invalides ou échec de connexion au Cloud.' };
         }
       }
 
@@ -256,15 +362,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       setIsConfigured(true);
       setIsUnlocked(true);
 
-      // Récupérer et déchiffrer les éléments du cloud
+      // Récupérer et déchiffrer immédiatement tous les éléments depuis le cloud
       if (isSupabaseConfigured()) {
-        await syncWithCloud(encryptionKey);
-      } else {
-        const existingLocal = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
-        if (!existingLocal) {
-          localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify([]));
-          setItems([]);
-        }
+        await syncWithCloud(encryptionKey, cleanEmail, authHash);
       }
 
       return { success: true };
@@ -337,17 +437,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       setItems(decryptedList);
       setIsUnlocked(true);
 
-      // 2. Connexion Supabase et synchronisation en arrière-plan
+      // 2. Synchronisation bidirectionnelle immédiate avec le Cloud
       if (isSupabaseConfigured()) {
-        try {
-          await supabase.auth.signInWithPassword({
-            email: config.email,
-            password: authHash,
-          });
-          syncWithCloud(encryptionKey);
-        } catch (cloudErr) {
-          console.warn('Erreur connexion cloud:', cloudErr);
-        }
+        syncWithCloud(encryptionKey, config.email, authHash);
       }
 
       return true;
