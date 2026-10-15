@@ -52,7 +52,7 @@ export async function generateTOTP(
     // Importation de la clé secrète pour HMAC-SHA1
     const cryptoKey = await crypto.subtle.importKey(
       'raw',
-      keyBytes,
+      keyBytes as unknown as BufferSource,
       { name: 'HMAC', hash: 'SHA-1' },
       false,
       ['sign']

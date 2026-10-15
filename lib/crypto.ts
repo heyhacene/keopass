@@ -49,13 +49,13 @@ export async function deriveKeys(
   const enc = new TextEncoder();
   const passwordKey = await crypto.subtle.importKey(
     'raw',
-    enc.encode(masterPassword),
+    enc.encode(masterPassword) as unknown as BufferSource,
     { name: 'PBKDF2' },
     false,
     ['deriveBits', 'deriveKey']
   );
 
-  const salt = enc.encode(saltStr.trim().toLowerCase() + '_keopass_salt_v1');
+  const salt = enc.encode(saltStr.trim().toLowerCase() + '_keopass_salt_v1') as unknown as BufferSource;
 
   // 1. Dérive 512 bits : 256 bits pour la clé de chiffrement + 256 bits pour le hash d'authentification
   const derivedBits = await crypto.subtle.deriveBits(
@@ -75,14 +75,14 @@ export async function deriveKeys(
   // Clé AES-256-GCM locale pour chiffrer/déchiffrer les données
   const encryptionKey = await crypto.subtle.importKey(
     'raw',
-    encryptionKeyBits,
+    encryptionKeyBits as unknown as BufferSource,
     { name: 'AES-GCM' },
     false,
     ['encrypt', 'decrypt']
   );
 
   // Hachage SHA-256 envoyé au serveur (ne permet JAMAIS de retrouver le mot de passe maître)
-  const authHashBuffer = await crypto.subtle.digest('SHA-256', authHashBits);
+  const authHashBuffer = await crypto.subtle.digest('SHA-256', authHashBits as unknown as BufferSource);
   const authHash = bufferToBase64(authHashBuffer);
 
   return { authHash, encryptionKey };
@@ -103,7 +103,7 @@ export async function encryptData(plaintext: string, key: CryptoKey): Promise<st
       iv,
     },
     key,
-    enc.encode(plaintext)
+    enc.encode(plaintext) as unknown as BufferSource
   );
 
   // Concaténation de l'IV et du ciphertext
@@ -133,7 +133,7 @@ export async function decryptData(encryptedBase64: string, key: CryptoKey): Prom
       iv,
     },
     key,
-    cipherBytes
+    cipherBytes as unknown as BufferSource
   );
 
   const dec = new TextDecoder();
