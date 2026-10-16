@@ -37,6 +37,7 @@ import {
   Bot,
   Puzzle,
   Keyboard,
+  ChevronRight,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 import { getAutofillStatus, openAutofillSettings } from '@/lib/autofillSync';
