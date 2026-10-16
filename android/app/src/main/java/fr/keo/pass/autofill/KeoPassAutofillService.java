@@ -243,7 +243,7 @@ public class KeoPassAutofillService extends AutofillService {
                     this, 0, intent, PendingIntent.FLAG_IMMUTABLE
             );
             androidx.autofill.inline.v1.InlineSuggestionUi.Content.Builder contentBuilder =
-                    new androidx.autofill.inline.v1.InlineSuggestionUi.Content.Builder(pendingIntent)
+                    androidx.autofill.inline.v1.InlineSuggestionUi.newContentBuilder(pendingIntent)
                             .setTitle(title);
             if (subtitle != null && !subtitle.isEmpty()) {
                 contentBuilder.setSubtitle(subtitle);
