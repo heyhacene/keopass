@@ -221,87 +221,60 @@ export default function HomePage() {
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
-        {/* BANNIÈRE PROPOSITION D'ACTIVATION EMPREINTE DIGITALE */}
-        {showBioBanner && (
-          <div className="mb-5 p-4 rounded-3xl bg-gradient-to-r from-vault-50 via-emerald-50 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-vault-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+        {/* BANNIÈRE COMPACTE DE RECOMMANDATION CONFIGURATION */}
+        {(showBioBanner || showAutofillBanner) && (
+          <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-vault-50/80 via-blue-50/60 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-vault-200/70 dark:border-slate-700 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-vault-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-vault-600/30">
-                <Fingerprint className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-vault-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Sparkles className="w-5 h-5 text-amber-300" />
               </div>
               <div>
                 <h3 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
-                  {bioSuccess ? 'Empreinte digitale activée ! 🎉' : 'Déverrouillez votre coffre en 1 touche'}
+                  {bioSuccess ? 'Configuration enregistrée ! 🎉' : 'Recommandations de confort & sécurité'}
                 </h3>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400">
                   {bioSuccess
-                    ? 'Vous pourrez désormais déverrouiller votre coffre avec votre empreinte.'
-                    : 'Activez l’empreinte digitale (ou Face ID / Windows Hello) sur cet appareil.'}
+                    ? 'Votre empreinte est prête pour déverrouiller KeoPass instantanément.'
+                    : 'Activez ces fonctionnalités pour une saisie fluide et sécurisée.'}
                 </p>
               </div>
             </div>
 
-            {!bioSuccess && (
-              <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex items-center gap-2 flex-wrap self-end sm:self-auto">
+              {showBioBanner && !bioSuccess && (
                 <button
                   type="button"
                   onClick={handleQuickEnableBio}
                   disabled={enablingBio}
-                  className="py-2 px-3.5 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                  className="py-1.5 px-3 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
                 >
                   <Fingerprint className="w-3.5 h-3.5" />
-                  <span>{enablingBio ? 'Posez votre doigt...' : 'Activer l’empreinte'}</span>
+                  <span>{enablingBio ? 'Posez le doigt...' : 'Empreinte'}</span>
                 </button>
+              )}
+
+              {showAutofillBanner && (
                 <button
                   type="button"
-                  onClick={() => setShowBioBanner(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl transition"
-                  title="Plus tard"
+                  onClick={async () => {
+                    await openAutofillSettings();
+                    setShowAutofillBanner(false);
+                  }}
+                  className="py-1.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs"
                 >
-                  <X className="w-4 h-4" />
+                  <Keyboard className="w-3.5 h-3.5" />
+                  <span>Saisie Clavier</span>
                 </button>
-              </div>
-            )}
-          </div>
-        )}
+              )}
 
-        {/* BANNIÈRE PROPOSITION SAISIE AUTOMATIQUE CLAVIER */}
-        {showAutofillBanner && (
-          <div className="mb-5 p-4 rounded-3xl bg-gradient-to-r from-blue-50 via-indigo-50 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-blue-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-600/30">
-                <Keyboard className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-                  <span>Remplissage automatique au-dessus du clavier</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
-                    Comme Samsung Pass
-                  </span>
-                </h4>
-                <p className="text-[11px] text-gray-600 dark:text-gray-300">
-                  Affichez vos suggestions de connexion directement au-dessus des touches dans toutes vos applications et navigateurs.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
               <button
                 type="button"
-                onClick={async () => {
-                  await openAutofillSettings();
+                onClick={() => {
+                  setShowBioBanner(false);
                   setShowAutofillBanner(false);
                 }}
-                className="py-2 px-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition flex items-center gap-1.5 shadow-sm shadow-blue-600/20"
-              >
-                <Keyboard className="w-3.5 h-3.5" />
-                <span>Activer</span>
-                <ExternalLink className="w-3 h-3 opacity-80" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAutofillBanner(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl transition"
-                title="Plus tard"
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg transition"
+                title="Ignorer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -435,62 +408,27 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* BOUTON D'AJOUT RAPIDE ET D'IMPORT EN SIDEBAR */}
+            {/* ACTIONS RAPIDES & SÉCURITÉ EN SIDEBAR */}
             <div className="pt-2 space-y-2">
               <button
                 type="button"
                 onClick={() => handleOpenAdd('login')}
-                className="w-full py-3 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-sm shadow-vault-600/20"
+                className="w-full py-2.5 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-xs shadow-vault-600/20 active:scale-98"
               >
                 <Plus className="w-4 h-4" />
-                <span>Ajouter un élément</span>
+                <span>Nouveau mot de passe</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setIsAuditModalOpen(true)}
-                className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-rose-200 dark:border-rose-800/60 shadow-xs"
+                className="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100/80 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 text-rose-700 dark:text-rose-300 font-semibold rounded-2xl text-xs transition flex items-center justify-between border border-rose-200/60 dark:border-rose-900/40"
               >
-                <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                <span>Audit de santé & Fuites</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsImportModalOpen(true)}
-                className="w-full py-2.5 bg-gray-50 hover:bg-emerald-50 dark:bg-slate-750 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-gray-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700/60"
-              >
-                <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Importer des mots de passe</span>
-              </button>
-
-              <a
-                href="https://keopass.vercel.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 bg-blue-50/70 hover:bg-blue-100/80 dark:bg-slate-750 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-blue-200/80 dark:border-blue-800/60"
-              >
-                <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>Version Web (Vercel)</span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
-              </a>
-
-              <button
-                type="button"
-                onClick={() => setIsExtensionModalOpen(true)}
-                className="w-full py-2.5 bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-slate-750 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-indigo-200/80 dark:border-indigo-800/60"
-              >
-                <Puzzle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                <span>Extension PC (Chrome/Edge)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsChatbotOpen(true)}
-                className="w-full py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 dark:from-slate-750 dark:to-slate-700 dark:hover:bg-slate-700 text-emerald-800 dark:text-emerald-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-emerald-300 dark:border-emerald-700/60 shadow-xs"
-              >
-                <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Assistant Support Keo</span>
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />
+                  <span>Santé & Fuites</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-rose-400 opacity-60" />
               </button>
             </div>
           </aside>

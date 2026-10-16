@@ -125,17 +125,21 @@ jobs:
             echo "🛡️ Validation de l'APK signé :"
             $APKSIGNER verify --verbose ../KeoPass.apk
             rm -f release.keystore aligned.apk
+            cp ../KeoPass.apk "../KeoPass-Build-${{ github.run_number }}.apk"
           else
             echo "⚠️ Secret SIGNING_KEY non configuré : compilation en mode Debug temporaire..."
             ./gradlew assembleDebug --stacktrace
             cp app/build/outputs/apk/debug/app-debug.apk ../KeoPass.apk
+            cp ../KeoPass.apk "../KeoPass-Build-${{ github.run_number }}.apk"
           fi
 
       - name: Publication de l'APK en téléchargement (Artifacts)
         uses: actions/upload-artifact@v4
         with:
           name: keopass-android-apk
-          path: KeoPass.apk
+          path: |
+            KeoPass.apk
+            KeoPass-Build-${{ github.run_number }}.apk
           if-no-files-found: error
           retention-days: 30
 
@@ -147,15 +151,16 @@ jobs:
           name: "KeoPass v1.0.0 (Build ${{ github.run_number }})"
           body: |
             ### 📱 Téléchargement KeoPass pour Android
-            Téléchargez le fichier `KeoPass.apk` ci-dessous directement sur votre smartphone pour installer l'application.
+            Téléchargez le fichier `KeoPass-Build-${{ github.run_number }}.apk` ci-dessous directement sur votre smartphone pour installer l'application.
+            - Fichier avec build : **KeoPass-Build-${{ github.run_number }}.apk**
             - Version : v1.0.0 (Build ${{ github.run_number }})
+            - Saisie automatique Android & pastilles au-dessus du clavier
             - Déverrouillage par empreinte digitale / biométrie
             - Signature cryptographique Release officielle (v1, v2, v3)
             - Chiffrement Zero-Knowledge AES-256
-            - Synchronisation Supabase intégrée
-            - Coffre-fort de mots de passe, cartes et notes
           files: |
             KeoPass.apk
+            KeoPass-Build-${{ github.run_number }}.apk
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
