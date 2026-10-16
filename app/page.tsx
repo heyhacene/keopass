@@ -9,6 +9,7 @@ import VaultItemCard from '@/components/VaultItemCard';
 import VaultItemModal from '@/components/VaultItemModal';
 import PasswordGenerator from '@/components/PasswordGenerator';
 import VaultSettingsModal from '@/components/VaultSettingsModal';
+import ImportPasswordsModal from '@/components/ImportPasswordsModal';
 import { VaultItem, VaultItemType } from '@/types/vault';
 import {
   ShieldCheck,
@@ -25,6 +26,7 @@ import {
   X,
   AlertCircle,
   Fingerprint,
+  Upload,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 
@@ -40,6 +42,7 @@ export default function HomePage() {
   const [modalDefaultType, setModalDefaultType] = useState<VaultItemType>('login');
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
   // Bannière proposition biométrie
@@ -185,6 +188,7 @@ export default function HomePage() {
         onOpenAddModal={() => handleOpenAdd('login')}
         onOpenGeneratorModal={() => setIsGeneratorModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenImportModal={() => setIsImportModalOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
       />
@@ -359,8 +363,8 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* BOUTON D'AJOUT RAPIDE EN SIDEBAR */}
-            <div className="pt-2">
+            {/* BOUTON D'AJOUT RAPIDE ET D'IMPORT EN SIDEBAR */}
+            <div className="pt-2 space-y-2">
               <button
                 type="button"
                 onClick={() => handleOpenAdd('login')}
@@ -368,6 +372,15 @@ export default function HomePage() {
               >
                 <Plus className="w-4 h-4" />
                 <span>Ajouter un élément</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="w-full py-2.5 bg-gray-50 hover:bg-emerald-50 dark:bg-slate-750 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-gray-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700/60"
+              >
+                <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Importer des mots de passe</span>
               </button>
             </div>
           </aside>
@@ -538,6 +551,16 @@ export default function HomePage() {
       <VaultSettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
+        onOpenImport={() => {
+          setIsSettingsModalOpen(false);
+          setIsImportModalOpen(true);
+        }}
+      />
+
+      {/* MODALE D'IMPORTATION DE MOTS DE PASSE */}
+      <ImportPasswordsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
       />
     </div>
   );

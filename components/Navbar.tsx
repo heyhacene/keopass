@@ -10,8 +10,9 @@ import {
   Search,
   Moon,
   Sun,
-  Laptop,
   Settings,
+  Upload,
+  Smartphone,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -20,6 +21,7 @@ interface NavbarProps {
   onOpenAddModal: () => void;
   onOpenGeneratorModal: () => void;
   onOpenSettingsModal: () => void;
+  onOpenImportModal?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -30,6 +32,7 @@ export default function Navbar({
   onOpenAddModal,
   onOpenGeneratorModal,
   onOpenSettingsModal,
+  onOpenImportModal,
   darkMode,
   onToggleDarkMode,
 }: NavbarProps) {
@@ -95,6 +98,19 @@ export default function Navbar({
             >
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Nouveau</span>
+            </button>
+          )}
+
+          {/* IMPORTER MOTS DE PASSE */}
+          {isUnlocked && onOpenImportModal && (
+            <button
+              type="button"
+              onClick={onOpenImportModal}
+              className="p-2 sm:px-3 sm:py-2 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800/60"
+              title="Importer des mots de passe (Chrome, Firefox, Bitwarden, Total Adblock, etc.)"
+            >
+              <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden md:inline">Importer</span>
             </button>
           )}
 

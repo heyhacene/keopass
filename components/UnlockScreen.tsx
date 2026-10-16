@@ -63,19 +63,10 @@ export default function UnlockScreen() {
     setUnlocking(true);
 
     setTimeout(async () => {
-      const success = await unlockVault(password);
+      const success = await unlockVault(password, enableBiometricOnUnlock && !hasBiometrics);
       if (!success) {
         setError('Mot de passe maître incorrect. Veuillez réessayer.');
         setUnlocking(false);
-      } else {
-        // Enregistre l'empreinte si l'option est cochée et supportée
-        if (enableBiometricOnUnlock && !hasBiometrics && userEmail) {
-          try {
-            await enableBiometric(password, userEmail);
-          } catch (bioErr) {
-            console.warn('Activation biométrique différée:', bioErr);
-          }
-        }
       }
     }, 50);
   };
@@ -161,7 +152,7 @@ export default function UnlockScreen() {
           </div>
 
           {/* PROPOSITION D'ACTIVATION EMPREINTE */}
-          {!hasBiometrics && biometricAvailable && (
+          {!hasBiometrics && (
             <label className="flex items-center gap-2.5 cursor-pointer pt-1 text-xs text-gray-600 dark:text-gray-300 text-left">
               <input
                 type="checkbox"

@@ -6,25 +6,12 @@
  */
 
 import { Capacitor } from '@capacitor/core';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 const NATIVE_SERVER_ID = 'fr.keo.pass';
 const NATIVE_STORAGE_KEY = 'keopass_native_bio_active_v1';
 const NATIVE_EMAIL_KEY = 'keopass_native_bio_email_v1';
 const WEBAUTHN_STORAGE_KEY = 'keopass_biometrics_v1';
-
-// Import dynamique sécurisé pour éviter toute évaluation SSR lors du build Next.js
-async function getNativeBiometric() {
-  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
-    try {
-      const module = await import('@capgo/capacitor-native-biometric');
-      return module.NativeBiometric;
-    } catch (e) {
-      console.warn('NativeBiometric non disponible sur ce système:', e);
-      return null;
-    }
-  }
-  return null;
-}
 
 // Convertit Buffer <-> Base64URL pour WebAuthn
 function bufferToBase64Url(buffer: ArrayBuffer | Uint8Array): string {
@@ -65,13 +52,17 @@ export async function isBiometricAvailable(): Promise<boolean> {
   // 1. Sur application Android / iOS (Capacitor natif)
   if (Capacitor.isNativePlatform()) {
     try {
-      const NativeBiometric = await getNativeBiometric();
-      if (!NativeBiometric) return false;
       const res = await NativeBiometric.isAvailable();
       return Boolean(res && res.isAvailable);
     } catch (err) {
       console.warn('Erreur détection biométrie native:', err);
-      return false;
+      // Tentative avec fallback passcode
+      try {
+        const resFallback = await NativeBiometric.isAvailable({ useFallback: true });
+        return Boolean(resFallback && resFallback.isAvailable);
+      } catch {
+        return false;
+      }
     }
   }
 
@@ -130,6 +121,7 @@ export function getBiometricEmail(): string | null {
 
 /**
  * Enregistre et active l'empreinte digitale pour KeoPass
+ * (Stockage direct dans le Keystore matériel Android sans popup redondante)
  */
 export async function enableBiometric(
   masterPassword: string,
@@ -144,19 +136,6 @@ export async function enableBiometric(
   // 1. Mobile Android / iOS Natif (Trousseau Keystore / Keychain matériel)
   if (Capacitor.isNativePlatform()) {
     try {
-      const NativeBiometric = await getNativeBiometric();
-      if (!NativeBiometric) {
-        return { success: false, error: 'Module biométrique natif non disponible' };
-      }
-
-      // Demande confirmation biométrique lors de l'enregistrement initial
-      await NativeBiometric.verifyIdentity({
-        reason: 'Activez l’empreinte digitale pour KeoPass',
-        title: 'KeoPass — Enregistrement biométrique',
-        subtitle: 'Confirmez votre empreinte',
-        description: 'Posez votre doigt sur le capteur pour activer la connexion biométrique',
-      });
-
       // Enregistre les identifiants de façon chiffrée dans le Keystore Android
       await NativeBiometric.setCredentials({
         username: cleanEmail,
@@ -170,11 +149,7 @@ export async function enableBiometric(
       return { success: true };
     } catch (err: any) {
       console.error('Erreur activation biométrie native:', err);
-      const msg = err.message || '';
-      if (msg.includes('cancel') || msg.includes('Cancel') || msg.includes('annulé') || msg.includes('user cancelled')) {
-        return { success: false, error: 'Activation biométrique annulée.' };
-      }
-      return { success: false, error: msg || 'Impossible d’activer l’empreinte sur cet appareil.' };
+      return { success: false, error: err.message || 'Impossible d’activer l’empreinte sur cet appareil.' };
     }
   }
 
@@ -274,11 +249,6 @@ export async function authenticateBiometric(): Promise<{
   // 1. Mobile Android / iOS Natif
   if (Capacitor.isNativePlatform()) {
     try {
-      const NativeBiometric = await getNativeBiometric();
-      if (!NativeBiometric) {
-        return { success: false, error: 'Module biométrique natif non disponible' };
-      }
-
       // Invite native système Android (BiometricPrompt)
       await NativeBiometric.verifyIdentity({
         reason: 'Déverrouillez votre coffre KeoPass avec votre empreinte',
@@ -382,10 +352,7 @@ export async function disableBiometric(): Promise<void> {
 
   if (Capacitor.isNativePlatform()) {
     try {
-      const NativeBiometric = await getNativeBiometric();
-      if (NativeBiometric) {
-        await NativeBiometric.deleteCredentials({ server: NATIVE_SERVER_ID });
-      }
+      await NativeBiometric.deleteCredentials({ server: NATIVE_SERVER_ID });
     } catch (e) {
       console.warn('Erreur suppression credentials native:', e);
     }

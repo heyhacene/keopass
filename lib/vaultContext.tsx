@@ -18,9 +18,10 @@ interface VaultContextType {
   setupVault: (masterPassword: string, email: string) => Promise<boolean>;
   loginVault: (masterPassword: string, email: string) => Promise<{ success: boolean; error?: string }>;
   resetVaultLocal: () => void;
-  unlockVault: (masterPassword: string) => Promise<boolean>;
+  unlockVault: (masterPassword: string, enableBiometricsIfRequested?: boolean) => Promise<boolean>;
   lockVault: () => void;
   addItem: (item: Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  bulkAddItems: (items: Array<Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<number>;
   updateItem: (id: string, updates: Partial<Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteItem: (id: string, permanent?: boolean) => Promise<void>;
   toggleFavorite: (id: string) => Promise<void>;
@@ -413,7 +414,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   /**
    * Déverrouillage du coffre-fort
    */
-  const unlockVault = async (masterPassword: string): Promise<boolean> => {
+  const unlockVault = async (masterPassword: string, enableBiometricsIfRequested = false): Promise<boolean> => {
     try {
       setLoading(true);
       const configStr = localStorage.getItem(LOCAL_STORAGE_CONFIG_KEY);
@@ -431,6 +432,15 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       authHashRef.current = authHash;
       masterPasswordRef.current = masterPassword;
       setMasterPasswordAvailable(true);
+
+      // Activation biométrique atomique si demandée
+      if (enableBiometricsIfRequested && config.email) {
+        try {
+          await enableBiometric(masterPassword, config.email);
+        } catch (bioErr) {
+          console.warn('Erreur activation biométrique lors du déverrouillage:', bioErr);
+        }
+      }
 
       // 1. Déchiffrement immédiat du stockage local (instantané & offline-first)
       const encryptedItemsStr = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
@@ -564,6 +574,27 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
+   * Import groupé d'éléments dans le coffre (Chrome, Firefox, Bitwarden, Adblock, etc.)
+   */
+  const bulkAddItems = async (
+    itemsData: Array<Omit<VaultItem, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<number> => {
+    if (!itemsData.length) return 0;
+    const now = new Date().toISOString();
+    const newItems: VaultItem[] = itemsData.map((data) => ({
+      ...data,
+      id: crypto.randomUUID(),
+      createdAt: now,
+      updatedAt: now,
+    }));
+
+    const nextList = [...newItems, ...items];
+    setItems(nextList);
+    await persistEncryptedItems(nextList);
+    return newItems.length;
+  };
+
+  /**
    * Modifie un élément existant
    */
   const updateItem = async (
@@ -681,6 +712,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         unlockVault,
         lockVault,
         addItem,
+        bulkAddItems,
         updateItem,
         deleteItem,
         toggleFavorite,
