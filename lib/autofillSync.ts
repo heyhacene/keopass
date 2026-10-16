@@ -57,7 +57,9 @@ export async function syncVaultToAutofill(items: VaultItem[]): Promise<number> {
       .filter((item) => item.type === 'login' && !item.deletedAt)
       .map((item) => {
         const data: any = item.data || {};
-        const domains: string[] = [];
+        const domains = new Set<string>();
+
+        // 1. Extraction et enrichissement depuis l'URL
         if (data.url) {
           try {
             let urlStr = data.url.trim();
@@ -65,18 +67,42 @@ export async function syncVaultToAutofill(items: VaultItem[]): Promise<number> {
               urlStr = 'https://' + urlStr;
             }
             const host = new URL(urlStr).hostname.replace(/^www\./, '').toLowerCase();
-            if (host) domains.push(host);
+            if (host) {
+              domains.add(host); // ex: zalando.fr, netflix.com
+              const parts = host.split('.');
+              if (parts.length >= 2 && parts[0].length >= 3) {
+                domains.add(parts[0]); // ex: zalando, netflix
+              }
+            }
           } catch (err) {
-            // URL non standard ignorée
+            const clean = data.url.toLowerCase().replace(/[^a-z0-9.]/g, '');
+            if (clean) domains.add(clean);
           }
         }
+
+        // 2. Extraction automatique de marque depuis le Titre de l'entrée
+        if (item.name) {
+          const titleWords = item.name
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .split(/[\s\-._:/]+/);
+
+          for (const w of titleWords) {
+            const clean = w.replace(/[^a-z0-9]/g, '');
+            if (clean.length >= 3) {
+              domains.add(clean); // ex: "zalando", "amazon", "banque"
+            }
+          }
+        }
+
         return {
           id: item.id,
           title: item.name || 'KeoPass',
           username: data.username || '',
           password: data.password || '',
           url: data.url || '',
-          domains,
+          domains: Array.from(domains),
         };
       })
       .filter((cred) => cred.username || cred.password);

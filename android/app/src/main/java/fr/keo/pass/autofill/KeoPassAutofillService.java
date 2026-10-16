@@ -3,6 +3,8 @@ package fr.keo.pass.autofill;
 import android.app.PendingIntent;
 import android.app.assist.AssistStructure;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.CancellationSignal;
 import android.service.autofill.AutofillService;
@@ -39,6 +41,7 @@ public class KeoPassAutofillService extends AutofillService {
         AutofillId passwordId;
         String webDomain;
         String packageName;
+        String windowTitle;
     }
 
     @Override
@@ -67,8 +70,24 @@ public class KeoPassAutofillService extends AutofillService {
                 return;
             }
 
+            // Recuperer le nom affiche de l'application (ex: "Zalando")
+            String appLabel = "";
+            if (parsed.packageName != null && !parsed.packageName.isEmpty()) {
+                try {
+                    PackageManager pm = getPackageManager();
+                    ApplicationInfo ai = pm.getApplicationInfo(parsed.packageName, 0);
+                    CharSequence l = pm.getApplicationLabel(ai);
+                    if (l != null) appLabel = l.toString();
+                } catch (Exception ignored) {}
+            }
+
             KeoPassAutofillRepository repo = new KeoPassAutofillRepository(this);
-            List<AutofillCredential> matches = repo.findMatches(parsed.webDomain, parsed.packageName);
+            List<AutofillCredential> matches = repo.findMatches(
+                    parsed.webDomain,
+                    parsed.packageName,
+                    parsed.windowTitle,
+                    appLabel
+            );
 
             if (matches.isEmpty()) {
                 callback.onSuccess(null);
@@ -131,7 +150,7 @@ public class KeoPassAutofillService extends AutofillService {
 
                 responseBuilder.addDataset(datasetBuilder.build());
                 addedCount++;
-                if (addedCount >= 5) break; // Maximum 5 suggestions pour eviter d'encombrer le clavier
+                if (addedCount >= 5) break;
             }
 
             if (addedCount > 0) {
@@ -147,7 +166,6 @@ public class KeoPassAutofillService extends AutofillService {
 
     @Override
     public void onSaveRequest(@NonNull SaveRequest request, @NonNull SaveCallback callback) {
-        // Enregistrement facultatif
         callback.onSuccess();
     }
 
@@ -159,6 +177,9 @@ public class KeoPassAutofillService extends AutofillService {
         int windowCount = structure.getWindowNodeCount();
         for (int i = 0; i < windowCount; i++) {
             AssistStructure.WindowNode window = structure.getWindowNodeAt(i);
+            if (window.getTitle() != null && result.windowTitle == null) {
+                result.windowTitle = window.getTitle().toString();
+            }
             AssistStructure.ViewNode root = window.getRootViewNode();
             traverseNode(root, result);
         }
@@ -168,8 +189,11 @@ public class KeoPassAutofillService extends AutofillService {
     private void traverseNode(AssistStructure.ViewNode node, ParsedStructure result) {
         if (node == null) return;
 
-        if (result.webDomain == null && node.getWebDomain() != null) {
-            result.webDomain = node.getWebDomain();
+        if (node.getWebDomain() != null && !node.getWebDomain().isEmpty()) {
+            String domain = node.getWebDomain().toLowerCase();
+            if (result.webDomain == null || result.webDomain.contains("google.com")) {
+                result.webDomain = domain;
+            }
         }
 
         String[] hints = node.getAutofillHints();
