@@ -2,12 +2,21 @@ export type VaultItemType = 'login' | 'card' | 'note' | 'identity';
 
 export type VaultFolder = 'personal' | 'work' | 'finance' | 'family' | 'other';
 
+export interface PasskeyInfo {
+  credentialId: string;
+  rpId: string;
+  userName?: string;
+  createdAt: string;
+  transports?: string[];
+}
+
 export interface LoginData {
   url?: string;
   username: string;
   password: string;
   totpSecret?: string;
   notes?: string;
+  passkey?: PasskeyInfo;
 }
 
 export interface CardData {

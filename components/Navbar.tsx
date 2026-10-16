@@ -4,6 +4,7 @@ import React from 'react';
 import { useVault } from '@/lib/vaultContext';
 import {
   ShieldCheck,
+  ShieldAlert,
   Lock,
   Plus,
   KeyRound,
@@ -15,6 +16,7 @@ import {
   Smartphone,
   Globe,
   Bot,
+  Puzzle,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -24,7 +26,9 @@ interface NavbarProps {
   onOpenGeneratorModal: () => void;
   onOpenSettingsModal: () => void;
   onOpenImportModal?: () => void;
+  onOpenAuditModal?: () => void;
   onOpenSupportChatbot?: () => void;
+  onOpenExtensionModal?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -36,7 +40,9 @@ export default function Navbar({
   onOpenGeneratorModal,
   onOpenSettingsModal,
   onOpenImportModal,
+  onOpenAuditModal,
   onOpenSupportChatbot,
+  onOpenExtensionModal,
   darkMode,
   onToggleDarkMode,
 }: NavbarProps) {
@@ -105,6 +111,19 @@ export default function Navbar({
             </button>
           )}
 
+          {/* AUDIT DE SÉCURITÉ */}
+          {isUnlocked && onOpenAuditModal && (
+            <button
+              type="button"
+              onClick={onOpenAuditModal}
+              className="p-2 sm:px-3 sm:py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-rose-200 dark:border-rose-800/60"
+              title="Audit de santé des mots de passe & Détection des fuites"
+            >
+              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+              <span className="hidden md:inline">Audit</span>
+            </button>
+          )}
+
           {/* IMPORTER MOTS DE PASSE */}
           {isUnlocked && onOpenImportModal && (
             <button
@@ -129,6 +148,19 @@ export default function Navbar({
             <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="hidden lg:inline">Version Web</span>
           </a>
+
+          {/* EXTENSION PC */}
+          {onOpenExtensionModal && (
+            <button
+              type="button"
+              onClick={onOpenExtensionModal}
+              className="p-2 sm:px-3 sm:py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-indigo-200 dark:border-indigo-800/60"
+              title="Extension Navigateur PC (Chrome, Edge, Brave)"
+            >
+              <Puzzle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden xl:inline">Extension PC</span>
+            </button>
+          )}
 
           {/* ASSISTANT SUPPORT CHATBOT */}
           {onOpenSupportChatbot && (

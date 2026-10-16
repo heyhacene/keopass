@@ -8,9 +8,15 @@ import {
   CardData,
   NoteData,
   IdentityData,
+  PasskeyInfo,
 } from '@/types/vault';
 import { useVault } from '@/lib/vaultContext';
 import { generatePassword } from '@/lib/crypto';
+import {
+  isPasskeySupported,
+  createPasskeyCredential,
+  authenticateWithPasskey,
+} from '@/lib/passkey';
 import TotpBadge from './TotpBadge';
 import PasswordGenerator from './PasswordGenerator';
 import {
@@ -28,6 +34,12 @@ import {
   Sparkles,
   ExternalLink,
   Star,
+  Share2,
+  Fingerprint,
+  Key,
+  ShieldCheck,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 interface VaultItemModalProps {
@@ -35,6 +47,7 @@ interface VaultItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultType?: VaultItemType;
+  onShare?: (item: VaultItem) => void;
 }
 
 export default function VaultItemModal({
@@ -42,6 +55,7 @@ export default function VaultItemModal({
   isOpen,
   onClose,
   defaultType = 'login',
+  onShare,
 }: VaultItemModalProps) {
   const { addItem, updateItem, deleteItem, toggleFavorite } = useVault();
 
@@ -60,6 +74,10 @@ export default function VaultItemModal({
   const [password, setPassword] = useState('');
   const [totpSecret, setTotpSecret] = useState('');
   const [notes, setNotes] = useState('');
+  const [passkey, setPasskey] = useState<PasskeyInfo | undefined>(undefined);
+  const [passkeyLoading, setPasskeyLoading] = useState(false);
+  const [passkeyMsg, setPasskeyMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [passkeySupported, setPasskeySupported] = useState(true);
 
   // Champs Carte
   const [cardholderName, setCardholderName] = useState('');
@@ -80,6 +98,9 @@ export default function VaultItemModal({
 
   // Initialisation à l'ouverture
   useEffect(() => {
+    setPasskeyMsg(null);
+    isPasskeySupported().then(setPasskeySupported);
+
     if (item) {
       setIsEditing(false);
       setItemType(item.type);
@@ -93,6 +114,7 @@ export default function VaultItemModal({
         setPassword(d.password || '');
         setTotpSecret(d.totpSecret || '');
         setNotes(d.notes || '');
+        setPasskey(d.passkey);
       } else if (item.type === 'card') {
         const d = item.data as CardData;
         setCardholderName(d.cardholderName || '');
@@ -102,9 +124,11 @@ export default function VaultItemModal({
         setCvv(d.cvv || '');
         setPin(d.pin || '');
         setNotes(d.notes || '');
+        setPasskey(undefined);
       } else if (item.type === 'note') {
         const d = item.data as NoteData;
         setNoteContent(d.content || '');
+        setPasskey(undefined);
       }
     } else {
       setIsEditing(true);
@@ -116,6 +140,7 @@ export default function VaultItemModal({
       setPassword('');
       setTotpSecret('');
       setNotes('');
+      setPasskey(undefined);
       setCardholderName('');
       setCardNumber('');
       setExpirationMonth('');
@@ -136,6 +161,46 @@ export default function VaultItemModal({
     } catch {}
   };
 
+  const handleRegisterPasskey = async () => {
+    setPasskeyLoading(true);
+    setPasskeyMsg(null);
+    try {
+      const res = await createPasskeyCredential(
+        name.trim() || 'Service KeoPass',
+        username.trim() || 'Compte',
+        url.trim()
+      );
+      if (res.success && res.passkey) {
+        setPasskey(res.passkey);
+        setPasskeyMsg({ text: 'Passkey enregistrée avec succès sur cet appareil !', type: 'success' });
+      } else {
+        setPasskeyMsg({ text: res.error || 'Échec de l’enregistrement de la Passkey.', type: 'error' });
+      }
+    } catch (err: any) {
+      setPasskeyMsg({ text: err.message || 'Erreur WebAuthn inconnue.', type: 'error' });
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
+  const handleTestPasskey = async () => {
+    if (!passkey) return;
+    setPasskeyLoading(true);
+    setPasskeyMsg(null);
+    try {
+      const res = await authenticateWithPasskey(passkey);
+      if (res.success) {
+        setPasskeyMsg({ text: 'Authentification Passkey validée avec succès !', type: 'success' });
+      } else {
+        setPasskeyMsg({ text: res.error || 'Échec de l’authentification.', type: 'error' });
+      }
+    } catch (err: any) {
+      setPasskeyMsg({ text: err.message || 'Erreur d’authentification.', type: 'error' });
+    } finally {
+      setPasskeyLoading(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -152,6 +217,7 @@ export default function VaultItemModal({
         password,
         totpSecret: totpSecret.trim(),
         notes: notes.trim(),
+        passkey: passkey || undefined,
       };
     } else if (itemType === 'card') {
       data = {
@@ -231,6 +297,19 @@ export default function VaultItemModal({
                 >
                   <Star className={`w-4 h-4 ${favorite ? 'fill-amber-500' : ''}`} />
                 </button>
+                {onShare && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      onShare(item);
+                    }}
+                    className="p-2 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-xl transition"
+                    title="Partager de manière sécurisée (lien éphémère)"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
@@ -418,6 +497,84 @@ export default function VaultItemModal({
                       <div className="mt-2">
                         <TotpBadge secret={totpSecret} />
                       </div>
+                    )}
+                  </div>
+
+                  {/* SECTION PASSKEY / WEBAUTHN */}
+                  <div className="p-3.5 bg-gradient-to-r from-indigo-50/70 to-purple-50/70 dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-indigo-150 dark:border-slate-700 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-xl bg-indigo-600 text-white">
+                          <Fingerprint className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-gray-900 dark:text-white">
+                            Passkey (WebAuthn / FIDO2)
+                          </h4>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                            Connexion sans mot de passe via empreinte ou clé de sécurité
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {passkeyMsg && (
+                      <div
+                        className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                          passkeyMsg.type === 'error'
+                            ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50'
+                            : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50'
+                        }`}
+                      >
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{passkeyMsg.text}</span>
+                      </div>
+                    )}
+
+                    {passkey ? (
+                      <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-indigo-200 dark:border-slate-700 flex items-center justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                              Passkey enregistrée
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-400 font-mono truncate mt-0.5">
+                            ID: {passkey.credentialId.slice(0, 16)}...
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPasskey(undefined);
+                            setPasskeyMsg({ text: 'Passkey retirée (enregistrez pour confirmer).', type: 'success' });
+                          }}
+                          className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg text-xs font-bold transition flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Retirer</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleRegisterPasskey}
+                        disabled={passkeyLoading}
+                        className="w-full py-2.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs disabled:opacity-50"
+                      >
+                        {passkeyLoading ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Enregistrement en cours sur l'appareil...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Fingerprint className="w-4 h-4" />
+                            <span>Enregistrer une Passkey sur cet appareil</span>
+                          </>
+                        )}
+                      </button>
                     )}
                   </div>
                 </>
@@ -626,6 +783,73 @@ export default function VaultItemModal({
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
+                    </div>
+                  )}
+
+                  {/* PASSKEY EN MODE VISUALISATION */}
+                  {passkey && (
+                    <div className="p-3.5 bg-gradient-to-r from-indigo-50/70 to-purple-50/70 dark:from-slate-800 dark:to-slate-800 rounded-2xl border border-indigo-150 dark:border-slate-700 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded-xl bg-indigo-600 text-white">
+                            <Fingerprint className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="text-xs font-bold text-gray-900 dark:text-white">
+                                Passkey FIDO2 Active
+                              </h4>
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                                WebAuthn
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400 font-mono truncate">
+                              ID: {passkey.credentialId.slice(0, 20)}...
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(passkey.credentialId, 'passkeyId')}
+                          className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-xl"
+                          title="Copier l'identifiant Passkey"
+                        >
+                          {copiedField === 'passkeyId' ? <Check className="w-4 h-4 text-vault-600" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+
+                      {passkeyMsg && (
+                        <div
+                          className={`p-2 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                            passkeyMsg.type === 'error'
+                              ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50'
+                              : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50'
+                          }`}
+                        >
+                          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                          <span>{passkeyMsg.text}</span>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleTestPasskey}
+                        disabled={passkeyLoading}
+                        className="w-full py-2 px-3 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-750 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-slate-700 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs disabled:opacity-50"
+                      >
+                        {passkeyLoading ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Vérification biométrique en cours...</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            <span>Tester la Passkey (Empreinte / Face ID)</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   )}
                 </>

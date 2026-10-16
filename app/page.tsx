@@ -11,9 +11,13 @@ import PasswordGenerator from '@/components/PasswordGenerator';
 import VaultSettingsModal from '@/components/VaultSettingsModal';
 import ImportPasswordsModal from '@/components/ImportPasswordsModal';
 import SupportChatbot from '@/components/SupportChatbot';
+import SecurityAuditModal from '@/components/SecurityAuditModal';
+import SecureShareModal from '@/components/SecureShareModal';
+import ExtensionInstallModal from '@/components/ExtensionInstallModal';
 import { VaultItem, VaultItemType } from '@/types/vault';
 import {
   ShieldCheck,
+  ShieldAlert,
   KeyRound,
   CreditCard,
   FileText,
@@ -31,6 +35,7 @@ import {
   Globe,
   ExternalLink,
   Bot,
+  Puzzle,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 
@@ -47,6 +52,10 @@ export default function HomePage() {
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [sharedItem, setSharedItem] = useState<VaultItem | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isExtensionModalOpen, setIsExtensionModalOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
@@ -194,7 +203,9 @@ export default function HomePage() {
         onOpenGeneratorModal={() => setIsGeneratorModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
+        onOpenAuditModal={() => setIsAuditModalOpen(true)}
         onOpenSupportChatbot={() => setIsChatbotOpen(true)}
+        onOpenExtensionModal={() => setIsExtensionModalOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
       />
@@ -382,6 +393,15 @@ export default function HomePage() {
 
               <button
                 type="button"
+                onClick={() => setIsAuditModalOpen(true)}
+                className="w-full py-2.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-rose-200 dark:border-rose-800/60 shadow-xs"
+              >
+                <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                <span>Audit de santé & Fuites</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setIsImportModalOpen(true)}
                 className="w-full py-2.5 bg-gray-50 hover:bg-emerald-50 dark:bg-slate-750 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 hover:text-emerald-700 dark:hover:text-emerald-400 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-gray-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-700/60"
               >
@@ -399,6 +419,15 @@ export default function HomePage() {
                 <span>Version Web (Vercel)</span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-70" />
               </a>
+
+              <button
+                type="button"
+                onClick={() => setIsExtensionModalOpen(true)}
+                className="w-full py-2.5 bg-indigo-50/70 hover:bg-indigo-100/80 dark:bg-slate-750 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-indigo-200/80 dark:border-indigo-800/60"
+              >
+                <Puzzle className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                <span>Extension PC (Chrome/Edge)</span>
+              </button>
 
               <button
                 type="button"
@@ -538,6 +567,10 @@ export default function HomePage() {
                     key={item.id}
                     item={item}
                     onSelect={handleSelectItem}
+                    onShare={(it) => {
+                      setSharedItem(it);
+                      setIsShareModalOpen(true);
+                    }}
                   />
                 ))}
               </div>
@@ -554,6 +587,11 @@ export default function HomePage() {
         onClose={() => {
           setIsModalOpen(false);
           setSelectedItem(null);
+        }}
+        onShare={(it) => {
+          setIsModalOpen(false);
+          setSharedItem(it);
+          setIsShareModalOpen(true);
         }}
       />
 
@@ -581,9 +619,44 @@ export default function HomePage() {
           setIsSettingsModalOpen(false);
           setIsImportModalOpen(true);
         }}
+        onOpenAudit={() => {
+          setIsSettingsModalOpen(false);
+          setIsAuditModalOpen(true);
+        }}
         onOpenSupportChatbot={() => {
           setIsSettingsModalOpen(false);
           setIsChatbotOpen(true);
+        }}
+        onOpenExtension={() => {
+          setIsSettingsModalOpen(false);
+          setIsExtensionModalOpen(true);
+        }}
+      />
+
+      {/* MODALE D'INSTALLATION EXTENSION PC */}
+      <ExtensionInstallModal
+        isOpen={isExtensionModalOpen}
+        onClose={() => setIsExtensionModalOpen(false)}
+      />
+
+      {/* MODALE D'AUDIT DE SÉCURITÉ & DE SANTÉ */}
+      <SecurityAuditModal
+        isOpen={isAuditModalOpen}
+        onClose={() => setIsAuditModalOpen(false)}
+        items={items}
+        onEditItem={(item) => {
+          setSelectedItem(item);
+          setIsModalOpen(true);
+        }}
+      />
+
+      {/* MODALE DE PARTAGE SÉCURISÉ ÉPHÉMÈRE */}
+      <SecureShareModal
+        item={sharedItem}
+        isOpen={isShareModalOpen}
+        onClose={() => {
+          setIsShareModalOpen(false);
+          setSharedItem(null);
         }}
       />
 
@@ -600,6 +673,7 @@ export default function HomePage() {
         onOpenImport={() => setIsImportModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenGenerator={() => setIsGeneratorModalOpen(true)}
+        onOpenAudit={() => setIsAuditModalOpen(true)}
       />
     </div>
   );

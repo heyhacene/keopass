@@ -15,14 +15,17 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  Share2,
+  Fingerprint,
 } from 'lucide-react';
 
 interface VaultItemCardProps {
   item: VaultItem;
   onSelect: (item: VaultItem) => void;
+  onShare?: (item: VaultItem) => void;
 }
 
-export default function VaultItemCard({ item, onSelect }: VaultItemCardProps) {
+export default function VaultItemCard({ item, onSelect, onShare }: VaultItemCardProps) {
   const { toggleFavorite } = useVault();
   const [copiedField, setCopiedField] = useState<'username' | 'password' | 'card' | null>(null);
 
@@ -70,11 +73,17 @@ export default function VaultItemCard({ item, onSelect }: VaultItemCardProps) {
       const data = item.data as LoginData;
       return (
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="font-bold text-sm text-gray-900 dark:text-white truncate">
               {item.name}
             </h4>
             {data.totpSecret && <TotpBadge secret={data.totpSecret} />}
+            {data.passkey && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 flex items-center gap-1 shrink-0">
+                <Fingerprint className="w-3 h-3" />
+                <span>Passkey</span>
+              </span>
+            )}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
             {data.username || (data.url ? new URL(data.url.startsWith('http') ? data.url : `https://${data.url}`).hostname : 'Sans identifiant')}
@@ -183,6 +192,19 @@ export default function VaultItemCard({ item, onSelect }: VaultItemCardProps) {
             ) : (
               <Copy className="w-4 h-4" />
             )}
+          </button>
+        {/* BOUTON PARTAGE SÉCURISÉ */}
+        {onShare && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onShare(item);
+            }}
+            className="p-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-700 rounded-xl transition"
+            title="Partager de manière sécurisée (lien éphémère)"
+          >
+            <Share2 className="w-4 h-4" />
           </button>
         )}
 

@@ -24,6 +24,8 @@ import {
   ArrowRight,
   Globe,
   Bot,
+  ShieldAlert,
+  Puzzle,
 } from 'lucide-react';
 import {
   isBiometricAvailable,
@@ -36,10 +38,19 @@ interface VaultSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenImport?: () => void;
+  onOpenAudit?: () => void;
   onOpenSupportChatbot?: () => void;
+  onOpenExtension?: () => void;
 }
 
-export default function VaultSettingsModal({ isOpen, onClose, onOpenImport, onOpenSupportChatbot }: VaultSettingsModalProps) {
+export default function VaultSettingsModal({
+  isOpen,
+  onClose,
+  onOpenImport,
+  onOpenAudit,
+  onOpenSupportChatbot,
+  onOpenExtension,
+}: VaultSettingsModalProps) {
   const {
     userEmail,
     autoLockMinutes,
@@ -316,6 +327,39 @@ export default function VaultSettingsModal({ isOpen, onClose, onOpenImport, onOp
             </div>
           </div>
 
+          {/* AUDIT DE SANTÉ & SÉCURITÉ */}
+          {onOpenAudit && (
+            <div className="p-4 rounded-3xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/80 dark:border-rose-900/50 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-rose-600 text-white rounded-xl shadow-xs">
+                    <ShieldAlert className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 dark:text-white">
+                      Audit de Santé & Fuites de Données
+                    </h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Vérification k-anonymat Zero-Knowledge (HaveIBeenPwned)
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenAudit();
+                }}
+                className="w-full py-2.5 px-3 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700 text-white text-xs font-bold rounded-2xl transition flex items-center justify-center gap-2 shadow-xs"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span>Lancer l'audit de sécurité</span>
+                <ArrowRight className="w-3.5 h-3.5 opacity-80" />
+              </button>
+            </div>
+          )}
+
           {/* SAUVEGARDE & RESTAURATION */}
           <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-slate-700">
             <h4 className="text-xs font-bold text-gray-400 dark:text-gray-400 uppercase tracking-wider">
@@ -455,6 +499,42 @@ export default function VaultSettingsModal({ isOpen, onClose, onOpenImport, onOp
               </a>
             </div>
           </div>
+
+          {/* EXTENSION NAVIGATEUR PC */}
+          {onOpenExtension && (
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-800 p-4 rounded-3xl border border-indigo-200/80 dark:border-slate-700 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-indigo-600 text-white rounded-xl">
+                    <Puzzle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                      Extension Navigateur PC
+                    </h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Remplissage automatique sur Chrome, Edge, Brave & Vivaldi
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onOpenExtension();
+                  }}
+                  className="w-full py-2.5 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Puzzle className="w-4 h-4" />
+                  <span>Installer l'extension (.ZIP)</span>
+                  <ArrowRight className="w-3.5 h-3.5 opacity-80" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* APPLICATION ANDROID (APK) & MISES À JOUR */}
           <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-800 p-4 rounded-3xl border border-emerald-200/80 dark:border-slate-700 shadow-sm space-y-3">

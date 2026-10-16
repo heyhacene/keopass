@@ -1,6 +1,6 @@
 export interface SupportAction {
   label: string;
-  type: 'open_import' | 'open_settings' | 'open_generator' | 'open_download_apk' | 'open_web' | 'open_dar';
+  type: 'open_import' | 'open_settings' | 'open_generator' | 'open_download_apk' | 'open_web' | 'open_dar' | 'open_audit';
   url?: string;
 }
 
@@ -14,6 +14,134 @@ export interface SupportFAQ {
 }
 
 export const SUPPORT_FAQS: SupportFAQ[] = [
+  {
+    id: 'security-audit',
+    title: 'Audit de santé & Détection des fuites de données (HaveIBeenPwned)',
+    quickQuestion: 'Comment vérifier si mes mots de passe ont été piratés ou ont fuité ?',
+    keywords: [
+      'audit',
+      'fuite',
+      'fuites',
+      'pirate',
+      'pirates',
+      'haveibeenpwned',
+      'pwned',
+      'sante',
+      'vulnerable',
+      'compromis',
+      'securite',
+      'doublon',
+      'reutilise',
+      'faible',
+    ],
+    answer: `### 🛡️ Audit de Santé & Détection des Fuites Zero-Knowledge
+
+KeoPass intègre un scanner de sécurité avancé basé sur le protocole mathématique de **k-Anonymat** (API HaveIBeenPwned de Troy Hunt) :
+
+1. **Garantie Zero-Knowledge :**
+   * Votre mot de passe en clair ne quitte **jamais** votre smartphone ou votre navigateur.
+   * Seuls les 5 premiers caractères du hash SHA-1 sont interrogés. La vérification finale se fait en mémoire RAM locale.
+2. **Ce que l'Audit analyse :**
+   * 🚨 **Fuites publiques :** Détecte si un de vos identifiants figure dans une brèche connue (ex: Adobe, LinkedIn, Canva...).
+   * ⚠️ **Mots de passe réutilisés :** Repère les doublons dangereux sur plusieurs sites.
+   * 🟡 **Robustesse :** Évalue la longueur, la complexité et les motifs trop évidents.
+   * ⏳ **Double authentification :** Identifie les comptes qui n'ont pas encore de code 2FA/TOTP.
+3. **Comment le lancer :**
+   * Cliquez sur le bouton rouge **« Audit »** dans la barre en haut ou dans le menu latéral.`,
+    action: {
+      label: 'Lancer l’Audit de Sécurité',
+      type: 'open_audit',
+    },
+  },
+  {
+    id: 'secure-share',
+    title: 'Partage sécurisé temporaire & Liens à usage unique',
+    quickQuestion: 'Comment partager un mot de passe ou un code Wi-Fi en toute sécurité ?',
+    keywords: [
+      'partager',
+      'partage',
+      'lien',
+      'usage unique',
+      'ephemere',
+      'autodestruction',
+      'temporaire',
+      'envoyer',
+      'ami',
+      'famille',
+      'invite',
+      'wifi',
+    ],
+    answer: `### 🔗 Partage Sécurisé & Liens à Autodestruction
+
+KeoPass vous permet d'envoyer un mot de passe ou une note confidentielle à un proche sans qu'il n'ait besoin d'installer l'application :
+
+1. **Sur n'importe quel élément de votre coffre :**
+   * Cliquez sur l'icône **« Partager »** (ou ouvrez l'élément puis cliquez sur le bouton de partage).
+2. **Options de confidentialité :**
+   * **Données partagées :** Choisissez d'inclure uniquement le mot de passe, ou aussi l'identifiant et les notes.
+   * **Délai d'expiration :** 1 heure, 24 heures, 3 jours ou 7 jours.
+   * **Autodestruction :** Dès que le destinataire ouvre le lien une première fois, le secret s'autodétruit immédiatement !
+3. **Chiffrement militaire dans l'URL (#) :**
+   * La clé secrète est encodée après le caractère \`#\`. Elle ne transite donc **jamais par aucun serveur**.`,
+  },
+  {
+    id: 'passkeys-webauthn',
+    title: 'Support des Passkeys (WebAuthn / FIDO2)',
+    quickQuestion: 'Comment fonctionnent les Passkeys dans KeoPass ?',
+    keywords: [
+      'passkey',
+      'passkeys',
+      'fido2',
+      'webauthn',
+      'sans mot de passe',
+      'cle de securite',
+      'biometrie',
+      'yubikey',
+    ],
+    answer: `### 🔑 Support des Passkeys (WebAuthn / FIDO2)
+
+Les Passkeys remplacent avantageusement les mots de passe traditionnels en exploitant la cryptographie asymétrique et la biométrie de votre appareil :
+
+1. **Création d'une Passkey :**
+   * Modifiez ou créez un identifiant, puis cliquez sur **« Enregistrer une Passkey sur cet appareil »**.
+   * Confirmez avec votre empreinte digitale, Face ID ou Windows Hello.
+2. **Connexion inviolable contre le phishing :**
+   * La clé privée reste stockée dans le module de sécurité matériel (TPM / Secure Enclave) de votre appareil.
+   * Aucune fuite de serveur ne peut compromettre une passkey !
+3. **Test immédiat :**
+   * Ouvrez l'élément enregistré et cliquez sur **« Tester la Passkey »** pour valider votre authentification en 1 seconde.`,
+  },
+  {
+    id: 'browser-extension',
+    title: 'Extension Navigateur PC (Chrome, Edge, Brave, Vivaldi)',
+    quickQuestion: 'Comment installer et utiliser l’extension navigateur sur mon PC ?',
+    keywords: [
+      'extension',
+      'navigateur',
+      'chrome',
+      'edge',
+      'brave',
+      'pc',
+      'ordinateur',
+      'autofill',
+      'remplissage',
+    ],
+    answer: `### 🧩 Extension Navigateur PC KeoPass
+
+KeoPass dispose d'une extension Manifest V3 compatible avec tous les navigateurs Chromium (Google Chrome, Microsoft Edge, Brave, Vivaldi, Opera) :
+
+1. **Téléchargement :**
+   * Cliquez sur le bouton **« Extension PC »** dans la barre de navigation ou dans les paramètres du coffre.
+   * Téléchargez l'archive \`keopass-extension.zip\`.
+2. **Installation en 30 secondes :**
+   * Décompressez le fichier ZIP dans un dossier sur votre PC.
+   * Rendez-vous sur \`chrome://extensions\` (ou \`edge://extensions\`).
+   * Activez le **« Mode développeur »** en haut à droite.
+   * Cliquez sur **« Charger le dossier décompressé »** et sélectionnez le dossier extrait.
+3. **Fonctionnalités :**
+   * Détection automatique des champs de connexion.
+   * Remplissage automatique des identifiants et mots de passe sans jamais exposer la clé maîtresse.`,
+  },
   {
     id: 'import-passwords',
     title: 'Importer vos mots de passe (Chrome, Firefox, Bitwarden...)',

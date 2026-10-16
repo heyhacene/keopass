@@ -16,6 +16,7 @@ import {
   Calendar,
   Key,
   ShieldCheck,
+  ShieldAlert,
   Check,
   HelpCircle,
   ChevronDown,
@@ -41,6 +42,7 @@ interface SupportChatbotProps {
   onOpenImport?: () => void;
   onOpenSettings?: () => void;
   onOpenGenerator?: () => void;
+  onOpenAudit?: () => void;
 }
 
 export default function SupportChatbot({
@@ -49,6 +51,7 @@ export default function SupportChatbot({
   onOpenImport,
   onOpenSettings,
   onOpenGenerator,
+  onOpenAudit,
 }: SupportChatbotProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
@@ -137,6 +140,9 @@ Posez-moi vos questions ou choisissez l'un des sujets rapides ci-dessous :`,
       setIsOpen(false);
     } else if (action.type === 'open_generator' && onOpenGenerator) {
       onOpenGenerator();
+      setIsOpen(false);
+    } else if (action.type === 'open_audit' && onOpenAudit) {
+      onOpenAudit();
       setIsOpen(false);
     } else if (action.url) {
       window.open(action.url, '_blank', 'noopener,noreferrer');
@@ -474,6 +480,7 @@ Vous pouvez aussi connecter une clé gratuite Google Gemini dans les réglages (
                             {msg.action.type === 'open_download_apk' && <Download className="w-3.5 h-3.5" />}
                             {msg.action.type === 'open_web' && <Globe className="w-3.5 h-3.5" />}
                             {msg.action.type === 'open_dar' && <Calendar className="w-3.5 h-3.5" />}
+                            {msg.action.type === 'open_audit' && <ShieldAlert className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />}
                             <span>{msg.action.label}</span>
                             <ExternalLink className="w-3 h-3 opacity-60" />
                           </button>
