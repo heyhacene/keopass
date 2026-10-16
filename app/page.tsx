@@ -27,6 +27,8 @@ import {
   AlertCircle,
   Fingerprint,
   Upload,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 
@@ -382,6 +384,17 @@ export default function HomePage() {
                 <Upload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Importer des mots de passe</span>
               </button>
+
+              <a
+                href="https://keopass.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 bg-blue-50/70 hover:bg-blue-100/80 dark:bg-slate-750 dark:hover:bg-slate-700 text-blue-700 dark:text-blue-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-blue-200/80 dark:border-blue-800/60"
+              >
+                <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <span>Version Web (Vercel)</span>
+                <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+              </a>
             </div>
           </aside>
 

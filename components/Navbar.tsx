@@ -13,6 +13,7 @@ import {
   Settings,
   Upload,
   Smartphone,
+  Globe,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -113,6 +114,18 @@ export default function Navbar({
               <span className="hidden md:inline">Importer</span>
             </button>
           )}
+
+          {/* LIEN VERSION WEB */}
+          <a
+            href="https://keopass.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition flex items-center gap-1.5 text-xs font-semibold"
+            title="Ouvrir la version Web (keopass.vercel.app)"
+          >
+            <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span className="hidden lg:inline">Version Web</span>
+          </a>
 
           {/* PARAMÈTRES DU COFFRE */}
           {isUnlocked && (

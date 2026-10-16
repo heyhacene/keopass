@@ -8,7 +8,7 @@ import {
   authenticateBiometric,
   enableBiometric,
 } from '@/lib/biometrics';
-import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint, Globe, ExternalLink } from 'lucide-react';
 
 export default function UnlockScreen() {
   const { userEmail, unlockVault, resetVaultLocal } = useVault();
@@ -197,9 +197,24 @@ export default function UnlockScreen() {
           </button>
         </div>
 
-        <div className="pt-2 border-t border-gray-100 dark:border-slate-700 text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-vault-600" />
-          <span>Protection Zero-Knowledge chiffrée sur votre appareil</span>
+        <div className="pt-2 border-t border-gray-100 dark:border-slate-700 space-y-2">
+          <div className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1.5">
+            <ShieldCheck className="w-4 h-4 text-vault-600" />
+            <span>Protection Zero-Knowledge chiffrée sur votre appareil</span>
+          </div>
+
+          <div className="flex items-center justify-center gap-1 text-[11px] text-gray-500 dark:text-gray-400">
+            <Globe className="w-3.5 h-3.5 text-blue-500" />
+            <a
+              href="https://keopass.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-600 dark:hover:text-blue-400 transition underline flex items-center gap-1 font-medium"
+            >
+              <span>Accéder à la version Web (keopass.vercel.app)</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
