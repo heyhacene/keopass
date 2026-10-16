@@ -14,6 +14,7 @@ import {
   Upload,
   Smartphone,
   Globe,
+  Bot,
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -23,6 +24,7 @@ interface NavbarProps {
   onOpenGeneratorModal: () => void;
   onOpenSettingsModal: () => void;
   onOpenImportModal?: () => void;
+  onOpenSupportChatbot?: () => void;
   darkMode: boolean;
   onToggleDarkMode: () => void;
 }
@@ -34,6 +36,7 @@ export default function Navbar({
   onOpenGeneratorModal,
   onOpenSettingsModal,
   onOpenImportModal,
+  onOpenSupportChatbot,
   darkMode,
   onToggleDarkMode,
 }: NavbarProps) {
@@ -126,6 +129,19 @@ export default function Navbar({
             <Globe className="w-4 h-4 text-blue-600 dark:text-blue-400" />
             <span className="hidden lg:inline">Version Web</span>
           </a>
+
+          {/* ASSISTANT SUPPORT CHATBOT */}
+          {onOpenSupportChatbot && (
+            <button
+              type="button"
+              onClick={onOpenSupportChatbot}
+              className="p-2 sm:px-3 sm:py-2 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 hover:from-emerald-500/20 hover:to-teal-500/20 text-emerald-700 dark:text-emerald-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border border-emerald-500/30"
+              title="Assistant Support Keo (Chatbot)"
+            >
+              <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden sm:inline">Assistant</span>
+            </button>
+          )}
 
           {/* PARAMÈTRES DU COFFRE */}
           {isUnlocked && (

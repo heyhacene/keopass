@@ -8,7 +8,7 @@ import {
   authenticateBiometric,
   enableBiometric,
 } from '@/lib/biometrics';
-import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint, Globe, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint, Globe, ExternalLink, Bot } from 'lucide-react';
 import SupportChatbot from '@/components/SupportChatbot';
 
 export default function UnlockScreen() {
@@ -20,6 +20,7 @@ export default function UnlockScreen() {
   const [hasBiometrics, setHasBiometrics] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [enableBiometricOnUnlock, setEnableBiometricOnUnlock] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   useEffect(() => {
     isBiometricAvailable().then((avail) => setBiometricAvailable(avail));
@@ -216,11 +217,22 @@ export default function UnlockScreen() {
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>
+
+          <div className="pt-1 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => setIsChatbotOpen(true)}
+              className="py-1 px-3 rounded-full bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-750 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold transition flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs"
+            >
+              <Bot className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>Besoin d'aide ? Discuter avec l'Assistant Keo</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* ASSISTANT DE SUPPORT */}
-      <SupportChatbot />
+      <SupportChatbot isOpen={isChatbotOpen} onToggle={setIsChatbotOpen} />
     </div>
   );
 }

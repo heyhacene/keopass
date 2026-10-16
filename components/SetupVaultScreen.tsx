@@ -14,6 +14,7 @@ import {
   RefreshCw,
   Smartphone,
   Laptop,
+  Bot,
 } from 'lucide-react';
 import SupportChatbot from '@/components/SupportChatbot';
 
@@ -26,6 +27,7 @@ export default function SetupVaultScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Critères stricts demandés : 8 caractères, 1 majuscule, 1 chiffre, 1 symbole
   const hasMinLength = password.length >= 8;
@@ -386,10 +388,21 @@ export default function SetupVaultScreen() {
             </button>
           </form>
         )}
+
+        <div className="pt-3 border-t border-gray-100 dark:border-slate-700 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setIsChatbotOpen(true)}
+            className="py-1.5 px-3.5 rounded-full bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-750 dark:hover:bg-slate-700 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition flex items-center gap-1.5 border border-emerald-200 dark:border-emerald-800/60 shadow-2xs"
+          >
+            <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Besoin d'aide ? Discuter avec l'Assistant Keo</span>
+          </button>
+        </div>
       </div>
 
       {/* ASSISTANT DE SUPPORT */}
-      <SupportChatbot />
+      <SupportChatbot isOpen={isChatbotOpen} onToggle={setIsChatbotOpen} />
     </div>
   );
 }

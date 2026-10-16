@@ -30,6 +30,7 @@ import {
   Upload,
   Globe,
   ExternalLink,
+  Bot,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 
@@ -46,6 +47,7 @@ export default function HomePage() {
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
 
   // Bannière proposition biométrie
@@ -192,6 +194,7 @@ export default function HomePage() {
         onOpenGeneratorModal={() => setIsGeneratorModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         onOpenImportModal={() => setIsImportModalOpen(true)}
+        onOpenSupportChatbot={() => setIsChatbotOpen(true)}
         darkMode={darkMode}
         onToggleDarkMode={toggleDarkMode}
       />
@@ -396,6 +399,15 @@ export default function HomePage() {
                 <span>Version Web (Vercel)</span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-70" />
               </a>
+
+              <button
+                type="button"
+                onClick={() => setIsChatbotOpen(true)}
+                className="w-full py-2.5 bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 dark:from-slate-750 dark:to-slate-700 dark:hover:bg-slate-700 text-emerald-800 dark:text-emerald-300 font-bold rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-emerald-300 dark:border-emerald-700/60 shadow-xs"
+              >
+                <Bot className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Assistant Support Keo</span>
+              </button>
             </div>
           </aside>
 
@@ -569,6 +581,10 @@ export default function HomePage() {
           setIsSettingsModalOpen(false);
           setIsImportModalOpen(true);
         }}
+        onOpenSupportChatbot={() => {
+          setIsSettingsModalOpen(false);
+          setIsChatbotOpen(true);
+        }}
       />
 
       {/* MODALE D'IMPORTATION DE MOTS DE PASSE */}
@@ -579,6 +595,8 @@ export default function HomePage() {
 
       {/* ASSISTANT CHATBOT DE SUPPORT */}
       <SupportChatbot
+        isOpen={isChatbotOpen}
+        onToggle={setIsChatbotOpen}
         onOpenImport={() => setIsImportModalOpen(true)}
         onOpenSettings={() => setIsSettingsModalOpen(true)}
         onOpenGenerator={() => setIsGeneratorModalOpen(true)}

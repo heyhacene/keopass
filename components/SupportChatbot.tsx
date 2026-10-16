@@ -36,17 +36,27 @@ interface Message {
 }
 
 interface SupportChatbotProps {
+  isOpen?: boolean;
+  onToggle?: (open: boolean) => void;
   onOpenImport?: () => void;
   onOpenSettings?: () => void;
   onOpenGenerator?: () => void;
 }
 
 export default function SupportChatbot({
+  isOpen: controlledIsOpen,
+  onToggle,
   onOpenImport,
   onOpenSettings,
   onOpenGenerator,
 }: SupportChatbotProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const isOpen = controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen;
+  const setIsOpen = (val: boolean) => {
+    if (onToggle) onToggle(val);
+    setInternalIsOpen(val);
+  };
+
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
@@ -324,21 +334,21 @@ Vous pouvez aussi connecter une clé gratuite Google Gemini dans les réglages (
   return (
     <>
       {/* BOUTON FLOTTANT D'OUVERTURE DU CHATBOT */}
-      <div className="fixed bottom-5 right-5 z-40">
+      <div className="fixed bottom-6 right-4 sm:bottom-6 sm:right-6 z-50">
         {!isOpen && (
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="group relative p-3.5 bg-gradient-to-r from-vault-600 to-emerald-500 hover:from-vault-700 hover:to-emerald-600 text-white rounded-full shadow-lg shadow-vault-600/30 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
-            title="Assistant Keo & Support"
+            className="group relative py-3 px-4 bg-gradient-to-r from-vault-600 via-emerald-600 to-teal-600 hover:from-vault-700 hover:to-emerald-700 text-white rounded-full shadow-2xl shadow-emerald-900/50 border-2 border-white/30 dark:border-slate-700 transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2"
+            title="Ouvrir l'Assistant Support Keo"
             aria-label="Ouvrir le support Keo"
           >
-            <Bot className="w-6 h-6" />
-            <span className="hidden md:inline pr-1 font-bold text-xs tracking-wide">
-              Support Keo
+            <Bot className="w-5 h-5 text-white animate-bounce" />
+            <span className="font-extrabold text-xs tracking-wide">
+              Assistant Keo
             </span>
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full animate-ping" />
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white dark:border-slate-900 rounded-full" />
           </button>
         )}
       </div>

@@ -23,6 +23,7 @@ import {
   Upload,
   ArrowRight,
   Globe,
+  Bot,
 } from 'lucide-react';
 import {
   isBiometricAvailable,
@@ -35,9 +36,10 @@ interface VaultSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenImport?: () => void;
+  onOpenSupportChatbot?: () => void;
 }
 
-export default function VaultSettingsModal({ isOpen, onClose, onOpenImport }: VaultSettingsModalProps) {
+export default function VaultSettingsModal({ isOpen, onClose, onOpenImport, onOpenSupportChatbot }: VaultSettingsModalProps) {
   const {
     userEmail,
     autoLockMinutes,
@@ -389,6 +391,38 @@ export default function VaultSettingsModal({ isOpen, onClose, onOpenImport }: Va
               </div>
             </button>
           </div>
+
+          {/* ASSISTANT SUPPORT & CHATBOT */}
+          {onOpenSupportChatbot && (
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 dark:from-slate-800 dark:to-slate-800 p-4 rounded-3xl border border-emerald-300 dark:border-emerald-700/60 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-vault-600 text-white rounded-xl shadow-xs">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                      Assistant Support Keo (Chatbot)
+                    </h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      Aide à l'import, empreinte digitale, sécurité et guide
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  onClick={onOpenSupportChatbot}
+                  className="w-full py-2.5 px-3 rounded-2xl bg-vault-600 hover:bg-vault-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Bot className="w-4 h-4" />
+                  <span>Discuter avec l'Assistant Keo</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* VERSION WEB & ACCÈS CLOUD */}
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 p-4 rounded-3xl border border-blue-200/80 dark:border-slate-700 shadow-sm space-y-3">
