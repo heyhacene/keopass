@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useVault } from '@/lib/vaultContext';
-import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
+import { isBiometricConfigured, authenticateBiometric } from '@/lib/biometrics';
+import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint } from 'lucide-react';
 
 export default function UnlockScreen() {
   const { userEmail, unlockVault, resetVaultLocal } = useVault();
@@ -10,6 +11,35 @@ export default function UnlockScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [unlocking, setUnlocking] = useState(false);
+  const [hasBiometrics, setHasBiometrics] = useState(false);
+
+  useEffect(() => {
+    const configured = isBiometricConfigured();
+    setHasBiometrics(configured);
+  }, []);
+
+  const handleBiometricUnlock = async () => {
+    setError('');
+    setUnlocking(true);
+    try {
+      const res = await authenticateBiometric();
+      if (res.success && res.masterPassword) {
+        const success = await unlockVault(res.masterPassword);
+        if (!success) {
+          setError('Échec du déchiffrement du coffre.');
+          setUnlocking(false);
+        }
+      } else {
+        if (res.error && !res.error.includes('annulée')) {
+          setError(res.error);
+        }
+        setUnlocking(false);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l’authentification biométrique.');
+      setUnlocking(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +48,6 @@ export default function UnlockScreen() {
     setError('');
     setUnlocking(true);
 
-    // Laisse un tick pour afficher le spinner pendant le calcul PBKDF2
     setTimeout(async () => {
       const success = await unlockVault(password);
       if (!success) {
@@ -41,7 +70,7 @@ export default function UnlockScreen() {
             Coffre-fort verrouillé
           </h2>
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            Saisissez votre mot de passe maître pour déchiffrer vos données
+            Déverrouillez votre coffre pour déchiffrer vos identifiants
           </p>
           {userEmail && (
             <div className="pt-2">
@@ -60,6 +89,28 @@ export default function UnlockScreen() {
           </div>
         )}
 
+        {/* DÉVERROUILLAGE BIOMÉTRIQUE (SI ACTIVÉ) */}
+        {hasBiometrics && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={handleBiometricUnlock}
+              disabled={unlocking}
+              className="w-full py-3.5 px-4 bg-vault-600/10 hover:bg-vault-600/20 text-vault-700 dark:text-vault-400 border border-vault-500/40 rounded-2xl text-xs sm:text-sm font-bold transition flex items-center justify-center gap-2.5 shadow-xs group"
+            >
+              <Fingerprint className="w-5 h-5 text-vault-600 dark:text-vault-400 group-hover:scale-110 transition-transform" />
+              <span>{unlocking ? 'Authentification...' : 'Déverrouiller avec l’empreinte digitale'}</span>
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200 dark:border-slate-700/60" />
+              <span className="text-[11px] text-gray-400 font-semibold uppercase">ou mot de passe</span>
+              <div className="flex-1 h-px bg-gray-200 dark:border-slate-700/60" />
+            </div>
+          </div>
+        )}
+
+        {/* FORMULAIRE MOT DE PASSE MAÎTRE */}
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-gray-200 mb-1.5">
@@ -69,7 +120,7 @@ export default function UnlockScreen() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                autoFocus
+                autoFocus={!hasBiometrics}
                 placeholder="Votre mot de passe maître"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

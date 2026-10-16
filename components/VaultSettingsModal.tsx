@@ -18,7 +18,14 @@ import {
   Heart,
   LifeBuoy,
   ExternalLink,
+  Fingerprint,
 } from 'lucide-react';
+import {
+  isBiometricAvailable,
+  isBiometricConfigured,
+  enableBiometric,
+  disableBiometric,
+} from '@/lib/biometrics';
 
 interface VaultSettingsModalProps {
   isOpen: boolean;
@@ -34,7 +41,78 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
     isSyncing,
     resetVaultLocal,
     syncNow,
+    masterPasswordAvailable,
+    enableBiometricsWithCurrentSession,
   } = useVault();
+
+  const [biometricSupported, setBiometricSupported] = React.useState(false);
+  const [biometricEnabled, setBiometricEnabled] = React.useState(false);
+  const [biometricLoading, setBiometricLoading] = React.useState(false);
+  const [biometricMsg, setBiometricMsg] = React.useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    isBiometricAvailable().then((avail) => setBiometricSupported(avail));
+    setBiometricEnabled(isBiometricConfigured());
+    setBiometricMsg(null);
+    setShowPasswordPrompt(false);
+    setConfirmPassword('');
+  }, [isOpen]);
+
+  const handleToggleBiometric = async () => {
+    setBiometricMsg(null);
+
+    if (biometricEnabled) {
+      disableBiometric();
+      setBiometricEnabled(false);
+      setBiometricMsg({ text: 'Déverrouillage par empreinte désactivé.', type: 'success' });
+      return;
+    }
+
+    if (masterPasswordAvailable) {
+      setBiometricLoading(true);
+      try {
+        const res = await enableBiometricsWithCurrentSession();
+        if (res.success) {
+          setBiometricEnabled(true);
+          setBiometricMsg({ text: 'Empreinte digitale activée avec succès !', type: 'success' });
+        } else {
+          setBiometricMsg({ text: res.error || 'Échec de l’activation biométrique.', type: 'error' });
+        }
+      } catch (err: any) {
+        setBiometricMsg({ text: err.message || 'Erreur inconnue.', type: 'error' });
+      } finally {
+        setBiometricLoading(false);
+      }
+    } else {
+      setShowPasswordPrompt(true);
+    }
+  };
+
+  const handleConfirmPasswordBiometric = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!confirmPassword) return;
+
+    setBiometricLoading(true);
+    setBiometricMsg(null);
+    try {
+      const res = await enableBiometric(confirmPassword, userEmail);
+      if (res.success) {
+        setBiometricEnabled(true);
+        setShowPasswordPrompt(false);
+        setConfirmPassword('');
+        setBiometricMsg({ text: 'Empreinte digitale activée avec succès !', type: 'success' });
+      } else {
+        setBiometricMsg({ text: res.error || 'Mot de passe incorrect ou enregistrement refusé.', type: 'error' });
+      }
+    } catch (err: any) {
+      setBiometricMsg({ text: err.message || 'Erreur inconnue.', type: 'error' });
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -118,6 +196,91 @@ export default function VaultSettingsModal({ isOpen, onClose }: VaultSettingsMod
               )}
             </div>
           </div>
+
+          {/* SÉCURITÉ BIOMÉTRIQUE / EMPREINTE */}
+          {biometricSupported && (
+            <div className="space-y-2 pt-2 border-t border-gray-100 dark:border-slate-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-vault-100 dark:bg-vault-950/60 text-vault-700 dark:text-vault-400 flex items-center justify-center">
+                    <Fingerprint className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 dark:text-white">
+                      Déverrouillage par empreinte
+                    </h4>
+                    <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                      {biometricEnabled
+                        ? 'Actif sur cet appareil (Empreinte / Windows Hello / Face ID)'
+                        : 'Déverrouillez en 1 touche sans retaper votre mot de passe'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={biometricEnabled}
+                  disabled={biometricLoading}
+                  onClick={handleToggleBiometric}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    biometricEnabled ? 'bg-vault-600' : 'bg-gray-200 dark:bg-slate-700'
+                  } ${biometricLoading ? 'opacity-50 cursor-wait' : ''}`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      biometricEnabled ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {biometricMsg && (
+                <div
+                  className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                    biometricMsg.type === 'error'
+                      ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50'
+                      : 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/50'
+                  }`}
+                >
+                  <Info className="w-3.5 h-3.5 shrink-0" />
+                  <span>{biometricMsg.text}</span>
+                </div>
+              )}
+
+              {showPasswordPrompt && (
+                <form onSubmit={handleConfirmPasswordBiometric} className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-700 space-y-2">
+                  <p className="text-[11px] text-gray-600 dark:text-gray-300 font-medium">
+                    Entrez votre mot de passe maître pour activer l'empreinte :
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="password"
+                      required
+                      placeholder="Mot de passe maître"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="flex-1 py-1.5 px-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs text-gray-900 dark:text-white outline-none focus:ring-1 focus:ring-vault-500 font-mono"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!confirmPassword || biometricLoading}
+                      className="py-1.5 px-3 bg-vault-600 text-white font-bold rounded-xl text-xs hover:bg-vault-700 disabled:opacity-50 transition"
+                    >
+                      {biometricLoading ? '...' : 'Activer'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordPrompt(false)}
+                      className="py-1.5 px-2 text-gray-400 hover:text-gray-600 text-xs"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
 
           {/* VERROUILLAGE AUTOMATIQUE */}
           <div className="space-y-2">

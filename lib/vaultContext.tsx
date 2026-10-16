@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { VaultItem, VaultItemType, EncryptedVaultItem } from '@/types/vault';
 import { deriveKeys, encryptData, decryptData } from '@/lib/crypto';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { enableBiometric, disableBiometric } from '@/lib/biometrics';
 
 interface VaultContextType {
   isUnlocked: boolean;
@@ -13,6 +14,7 @@ interface VaultContextType {
   items: VaultItem[];
   userEmail: string;
   autoLockMinutes: number;
+  masterPasswordAvailable: boolean;
   setupVault: (masterPassword: string, email: string) => Promise<boolean>;
   loginVault: (masterPassword: string, email: string) => Promise<{ success: boolean; error?: string }>;
   resetVaultLocal: () => void;
@@ -25,6 +27,7 @@ interface VaultContextType {
   setAutoLockMinutes: (minutes: number) => void;
   exportVaultData: (includePlaintext?: boolean) => void;
   syncNow: () => Promise<void>;
+  enableBiometricsWithCurrentSession: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const VaultContext = createContext<VaultContextType | undefined>(undefined);
@@ -41,9 +44,11 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = useState('');
   const [autoLockMinutes, setAutoLockMinutesState] = useState(15);
 
-  // Clé cryptographique stockée STRICTEMENT en mémoire RAM volatile
+  // Clé cryptographique et mot de passe stockés STRICTEMENT en mémoire RAM volatile
   const encryptionKeyRef = useRef<CryptoKey | null>(null);
   const authHashRef = useRef<string | null>(null);
+  const masterPasswordRef = useRef<string | null>(null);
+  const [masterPasswordAvailable, setMasterPasswordAvailable] = useState(false);
   const autoLockTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Vérifier si un coffre-fort est déjà configuré en local
@@ -308,6 +313,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         await ensureSupabaseAuth(cleanEmail, authHash);
       }
 
+      masterPasswordRef.current = masterPassword;
+      setMasterPasswordAvailable(true);
+
       const config = {
         configured: true,
         email: cleanEmail,
@@ -360,6 +368,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
       encryptionKeyRef.current = encryptionKey;
       authHashRef.current = authHash;
+      masterPasswordRef.current = masterPassword;
+      setMasterPasswordAvailable(true);
 
       const config = {
         configured: true,
@@ -394,6 +404,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const resetVaultLocal = () => {
     localStorage.removeItem(LOCAL_STORAGE_CONFIG_KEY);
     localStorage.removeItem(LOCAL_STORAGE_VAULT_KEY);
+    disableBiometric();
     lockVault();
     setIsConfigured(false);
     setUserEmail('');
@@ -418,6 +429,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
 
       encryptionKeyRef.current = encryptionKey;
       authHashRef.current = authHash;
+      masterPasswordRef.current = masterPassword;
+      setMasterPasswordAvailable(true);
 
       // 1. Déchiffrement immédiat du stockage local (instantané & offline-first)
       const encryptedItemsStr = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
@@ -469,6 +482,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
   const lockVault = () => {
     encryptionKeyRef.current = null;
     authHashRef.current = null;
+    masterPasswordRef.current = null;
+    setMasterPasswordAvailable(false);
     setItems([]);
     setIsUnlocked(false);
     if (autoLockTimerRef.current) {
@@ -642,6 +657,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const enableBiometricsWithCurrentSession = async (): Promise<{ success: boolean; error?: string }> => {
+    if (!masterPasswordRef.current || !userEmail) {
+      return { success: false, error: 'Mot de passe maître non disponible en mémoire.' };
+    }
+    return await enableBiometric(masterPasswordRef.current, userEmail);
+  };
+
   return (
     <VaultContext.Provider
       value={{
@@ -652,6 +674,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         items,
         userEmail,
         autoLockMinutes,
+        masterPasswordAvailable,
         setupVault,
         loginVault,
         resetVaultLocal,
@@ -664,6 +687,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         setAutoLockMinutes,
         exportVaultData,
         syncNow,
+        enableBiometricsWithCurrentSession,
       }}
     >
       {children}
