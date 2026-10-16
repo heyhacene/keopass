@@ -24,12 +24,14 @@ import {
   Layers,
   X,
   AlertCircle,
+  Fingerprint,
 } from 'lucide-react';
+import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
 
 type FilterCategory = 'all' | 'favorites' | 'login' | 'card' | 'note' | 'totp';
 
 export default function HomePage() {
-  const { isConfigured, isUnlocked, loading, items } = useVault();
+  const { isConfigured, isUnlocked, loading, items, enableBiometricsWithCurrentSession } = useVault();
 
   const [activeCategory, setActiveCategory] = useState<FilterCategory>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +41,39 @@ export default function HomePage() {
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+
+  // Bannière proposition biométrie
+  const [showBioBanner, setShowBioBanner] = useState(false);
+  const [enablingBio, setEnablingBio] = useState(false);
+  const [bioSuccess, setBioSuccess] = useState(false);
+
+  React.useEffect(() => {
+    if (isUnlocked) {
+      const configured = isBiometricConfigured();
+      if (!configured) {
+        isBiometricAvailable().then((avail) => {
+          if (avail) setShowBioBanner(true);
+        });
+      }
+    }
+  }, [isUnlocked]);
+
+  const handleQuickEnableBio = async () => {
+    setEnablingBio(true);
+    try {
+      const res = await enableBiometricsWithCurrentSession();
+      if (res.success) {
+        setBioSuccess(true);
+        setTimeout(() => setShowBioBanner(false), 2500);
+      } else {
+        alert(res.error || 'Impossible d’activer l’empreinte.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Erreur lors de l’activation biométrique.');
+    } finally {
+      setEnablingBio(false);
+    }
+  };
 
   // Bascule du mode clair / sombre
   const toggleDarkMode = () => {
@@ -155,6 +190,49 @@ export default function HomePage() {
       />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+        {/* BANNIÈRE PROPOSITION D'ACTIVATION EMPREINTE DIGITALE */}
+        {showBioBanner && (
+          <div className="mb-5 p-4 rounded-3xl bg-gradient-to-r from-vault-50 via-emerald-50 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-vault-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-vault-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-vault-600/30">
+                <Fingerprint className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white">
+                  {bioSuccess ? 'Empreinte digitale activée ! 🎉' : 'Déverrouillez votre coffre en 1 touche'}
+                </h3>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                  {bioSuccess
+                    ? 'Vous pourrez désormais déverrouiller votre coffre avec votre empreinte.'
+                    : 'Activez l’empreinte digitale (ou Face ID / Windows Hello) sur cet appareil.'}
+                </p>
+              </div>
+            </div>
+
+            {!bioSuccess && (
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleQuickEnableBio}
+                  disabled={enablingBio}
+                  className="py-2 px-3.5 bg-vault-600 hover:bg-vault-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs disabled:opacity-50"
+                >
+                  <Fingerprint className="w-3.5 h-3.5" />
+                  <span>{enablingBio ? 'Posez votre doigt...' : 'Activer l’empreinte'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBioBanner(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl transition"
+                  title="Plus tard"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* BARRE DE RECHERCHE MOBILE */}
         <div className="sm:hidden mb-4 relative">
           <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

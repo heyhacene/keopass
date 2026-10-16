@@ -49,7 +49,35 @@ jobs:
           if [ ! -d "android" ]; then
             npx cap add android
           fi
-          npx cap sync android
+
+      - name: Génération automatique des icônes Android et Extension depuis le logo SVG
+        run: |
+          sudo apt-get update && sudo apt-get install -y librsvg2-bin
+          # Icônes de lancement Android (Mipmap Standard & Round)
+          rsvg-convert -w 48 -h 48 public/icon.svg -o android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          rsvg-convert -w 48 -h 48 public/icon.svg -o android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          rsvg-convert -w 72 -h 72 public/icon.svg -o android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          rsvg-convert -w 72 -h 72 public/icon.svg -o android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          rsvg-convert -w 96 -h 96 public/icon.svg -o android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          rsvg-convert -w 96 -h 96 public/icon.svg -o android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          rsvg-convert -w 144 -h 144 public/icon.svg -o android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          rsvg-convert -w 144 -h 144 public/icon.svg -o android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          rsvg-convert -w 192 -h 192 public/icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          rsvg-convert -w 192 -h 192 public/icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          # Icônes adaptatives (Foreground)
+          rsvg-convert -w 108 -h 108 public/icon.svg -o android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png
+          rsvg-convert -w 162 -h 162 public/icon.svg -o android/app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png
+          rsvg-convert -w 216 -h 216 public/icon.svg -o android/app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png
+          rsvg-convert -w 324 -h 324 public/icon.svg -o android/app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png
+          rsvg-convert -w 432 -h 432 public/icon.svg -o android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png
+          # Extension Chrome
+          mkdir -p extension/icons
+          rsvg-convert -w 16 -h 16 public/icon.svg -o extension/icons/icon-16.png
+          rsvg-convert -w 48 -h 48 public/icon.svg -o extension/icons/icon-48.png
+          rsvg-convert -w 128 -h 128 public/icon.svg -o extension/icons/icon-128.png
+
+      - name: Synchronisation Capacitor Android
+        run: npx cap sync android
 
       - name: Compilation et Signature de l'APK Android
         working-directory: android

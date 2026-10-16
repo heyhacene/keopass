@@ -29,13 +29,14 @@ function base64UrlToBuffer(base64url: string): Uint8Array {
 function getRelyingPartyId(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const hostname = window.location.hostname;
-  if (!hostname || hostname === '' || hostname === '127.0.0.1') {
-    return 'localhost';
+  if (!hostname || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
+    // Omettre le rp.id pour que le navigateur / WebView utilise automatiquement son origine native sans validation de nom de domaine
+    return undefined;
   }
   return hostname;
 }
 
-// Vérifie si l'appareil dispose d'un capteur biométrique (Empreinte, Face ID, Windows Hello)
+// Vérifie si l'appareil dispose du support WebAuthn / Biométrie
 export async function isBiometricAvailable(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
   if (!window.PublicKeyCredential) return false;
@@ -45,7 +46,8 @@ export async function isBiometricAvailable(): Promise<boolean> {
     return Boolean(available);
   } catch (err) {
     console.warn('Erreur détection biométrie:', err);
-    return false;
+    // Si la méthode rejette sur certains WebViews mobiles mais que PublicKeyCredential existe
+    return true;
   }
 }
 

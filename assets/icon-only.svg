@@ -1,31 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="keoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#10b981" />
-      <stop offset="50%" stop-color="#059669" />
+    <!-- Dégradé du bouclier : Émeraude de sécurité moderne -->
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="35%" stop-color="#10b981" />
+      <stop offset="75%" stop-color="#059669" />
       <stop offset="100%" stop-color="#047857" />
     </linearGradient>
-    <linearGradient id="kGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+
+    <!-- Dégradé de la lettre K : Blanc pur éclatant avec reflets subtils -->
+    <linearGradient id="kWhite" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#ffffff" />
-      <stop offset="100%" stop-color="#d1fae5" />
+      <stop offset="100%" stop-color="#f0fdf4" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#10b981" flood-opacity="0.3" />
+
+    <!-- Ombre portée pour le bouclier -->
+    <filter id="shieldShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#10b981" flood-opacity="0.35" />
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+
+    <!-- Ombre douce pour la lettre K -->
+    <filter id="kShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#022c22" flood-opacity="0.35" />
     </filter>
   </defs>
 
-  <!-- Arrière-plan arrondi moderne -->
+  <!-- Arrière-plan arrondi Dark Squircle -->
   <rect width="512" height="512" rx="128" fill="#090d16" />
 
-  <!-- Bouclier Keo sécurisé -->
-  <path d="M256 64 C360 96 424 116 424 116 C424 300 356 416 256 448 C156 416 88 300 88 116 C88 116 152 96 256 64 Z" fill="url(#keoGrad)" filter="url(#glow)" />
+  <!-- Bouclier de sécurité KeoPass -->
+  <g filter="url(#shieldShadow)">
+    <path d="M256 68 C366 98 424 118 424 118 C424 300 356 414 256 444 C156 414 88 300 88 118 C88 118 146 98 256 68 Z" 
+          fill="url(#shieldGrad)" />
+    <!-- Facette droite du bouclier (relief 3D) -->
+    <path d="M256 68 C366 98 424 118 424 118 C424 300 356 414 256 444 L256 68 Z" 
+          fill="#000000" opacity="0.12" />
+    <!-- Bordure biseautée lumineuse interne -->
+    <path d="M256 76 C360 105 416 124 416 124 C416 294 350 404 256 434 C162 404 96 294 96 124 C96 124 152 105 256 76 Z" 
+          fill="none" stroke="#ffffff" stroke-width="3" opacity="0.25" />
+  </g>
 
-  <!-- Anneau supérieur de cadenas / voûte (Anse) -->
-  <path d="M212 196 V164 C212 139.7 231.7 120 256 120 C280.3 120 300 139.7 300 164 V196" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" />
+  <!-- Lettre K nette, bold et dynamique (ZÉRO boucle fermée, lecture 100% K) -->
+  <g filter="url(#kShadow)">
+    <!-- 1. Barre verticale du K (gauche) -->
+    <rect x="176" y="160" width="38" height="192" rx="19" fill="url(#kWhite)" />
 
-  <!-- Lettre K stylisée au centre du bouclier (Keo) -->
-  <path d="M204 196 V344 M204 270 L304 186 M236 244 L312 344" fill="none" stroke="url(#kGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- 2. Branche supérieure du K (orientée haut-droite, totalement ouverte) -->
+    <path d="M 214 260 L 322 168 C 332 160 346 162 354 172 C 362 182 360 196 350 204 L 254 286 Z" 
+          fill="url(#kWhite)" />
 
-  <!-- Petit trou de serrure discret -->
-  <circle cx="218" cy="270" r="6" fill="#047857" />
+    <!-- 3. Branche inférieure du K (orientée bas-droite, totalement ouverte) -->
+    <path d="M 234 266 L 334 366 C 344 376 344 392 334 402 C 324 412 308 412 298 402 L 208 312 Z" 
+          fill="url(#kWhite)" />
+
+    <!-- 4. Serrure de sécurité discrète au centre de la colonne (symbole du coffre-fort) -->
+    <circle cx="195" cy="246" r="7" fill="#047857" />
+    <path d="M 191 248 L 199 248 L 201 268 L 189 268 Z" fill="#047857" />
+  </g>
 </svg>

@@ -2,7 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useVault } from '@/lib/vaultContext';
-import { isBiometricConfigured, authenticateBiometric } from '@/lib/biometrics';
+import {
+  isBiometricAvailable,
+  isBiometricConfigured,
+  authenticateBiometric,
+  enableBiometric,
+} from '@/lib/biometrics';
 import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint } from 'lucide-react';
 
 export default function UnlockScreen() {
@@ -12,8 +17,11 @@ export default function UnlockScreen() {
   const [error, setError] = useState('');
   const [unlocking, setUnlocking] = useState(false);
   const [hasBiometrics, setHasBiometrics] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [enableBiometricOnUnlock, setEnableBiometricOnUnlock] = useState(true);
 
   useEffect(() => {
+    isBiometricAvailable().then((avail) => setBiometricAvailable(avail));
     const configured = isBiometricConfigured();
     setHasBiometrics(configured);
   }, []);
@@ -53,6 +61,15 @@ export default function UnlockScreen() {
       if (!success) {
         setError('Mot de passe maître incorrect. Veuillez réessayer.');
         setUnlocking(false);
+      } else {
+        // Enregistre l'empreinte si l'option est cochée et supportée
+        if (enableBiometricOnUnlock && !hasBiometrics && userEmail) {
+          try {
+            await enableBiometric(password, userEmail);
+          } catch (bioErr) {
+            console.warn('Activation biométrique différée:', bioErr);
+          }
+        }
       }
     }, 50);
   };
@@ -136,6 +153,22 @@ export default function UnlockScreen() {
               </button>
             </div>
           </div>
+
+          {/* PROPOSITION D'ACTIVATION EMPREINTE */}
+          {!hasBiometrics && biometricAvailable && (
+            <label className="flex items-center gap-2.5 cursor-pointer pt-1 text-xs text-gray-600 dark:text-gray-300 text-left">
+              <input
+                type="checkbox"
+                checked={enableBiometricOnUnlock}
+                onChange={(e) => setEnableBiometricOnUnlock(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-vault-600 focus:ring-vault-500"
+              />
+              <span className="flex items-center gap-1.5 font-medium">
+                <Fingerprint className="w-4 h-4 text-vault-600 dark:text-vault-400 shrink-0" />
+                Activer l'empreinte digitale pour les prochains déverrouillages
+              </span>
+            </label>
+          )}
 
           <button
             type="submit"
