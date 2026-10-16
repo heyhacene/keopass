@@ -10,6 +10,7 @@ import VaultItemModal from '@/components/VaultItemModal';
 import PasswordGenerator from '@/components/PasswordGenerator';
 import VaultSettingsModal from '@/components/VaultSettingsModal';
 import ImportPasswordsModal from '@/components/ImportPasswordsModal';
+import SupportChatbot from '@/components/SupportChatbot';
 import { VaultItem, VaultItemType } from '@/types/vault';
 import {
   ShieldCheck,
@@ -574,6 +575,13 @@ export default function HomePage() {
       <ImportPasswordsModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+      />
+
+      {/* ASSISTANT CHATBOT DE SUPPORT */}
+      <SupportChatbot
+        onOpenImport={() => setIsImportModalOpen(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
+        onOpenGenerator={() => setIsGeneratorModalOpen(true)}
       />
     </div>
   );

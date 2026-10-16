@@ -9,6 +9,7 @@ import {
   enableBiometric,
 } from '@/lib/biometrics';
 import { ShieldCheck, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Fingerprint, Globe, ExternalLink } from 'lucide-react';
+import SupportChatbot from '@/components/SupportChatbot';
 
 export default function UnlockScreen() {
   const { userEmail, unlockVault, resetVaultLocal } = useVault();
@@ -217,6 +218,9 @@ export default function UnlockScreen() {
           </div>
         </div>
       </div>
+
+      {/* ASSISTANT DE SUPPORT */}
+      <SupportChatbot />
     </div>
   );
 }
