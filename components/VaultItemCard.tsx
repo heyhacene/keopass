@@ -193,6 +193,8 @@ export default function VaultItemCard({ item, onSelect, onShare }: VaultItemCard
               <Copy className="w-4 h-4" />
             )}
           </button>
+        )}
+
         {/* BOUTON PARTAGE SÉCURISÉ */}
         {onShare && (
           <button
