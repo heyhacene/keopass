@@ -15,6 +15,7 @@ import {
   Smartphone,
   Laptop,
 } from 'lucide-react';
+import SupportChatbot from '@/components/SupportChatbot';
 
 export default function SetupVaultScreen() {
   const { setupVault, loginVault } = useVault();
@@ -386,6 +387,9 @@ export default function SetupVaultScreen() {
           </form>
         )}
       </div>
+
+      {/* ASSISTANT DE SUPPORT */}
+      <SupportChatbot />
     </div>
   );
 }
