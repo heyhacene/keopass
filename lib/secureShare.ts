@@ -66,9 +66,9 @@ export async function createEncryptedShareLink(
   const encodedData = enc.encode(JSON.stringify(fullPayload));
 
   const cipherBuffer = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv },
+    { name: 'AES-GCM', iv: iv as any },
     key,
-    encodedData
+    encodedData as any
   );
 
   // Concatène IV + Ciphertext
@@ -140,16 +140,16 @@ export async function decryptSharedSecret(
 
   const key = await crypto.subtle.importKey(
     'raw',
-    rawKey,
+    rawKey as any,
     { name: 'AES-GCM' },
     false,
     ['decrypt']
   );
 
   const decryptedBuffer = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
+    { name: 'AES-GCM', iv: iv as any },
     key,
-    ciphertext
+    ciphertext as any
   );
 
   const dec = new TextDecoder();
