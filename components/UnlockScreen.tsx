@@ -24,6 +24,12 @@ export default function UnlockScreen() {
     isBiometricAvailable().then((avail) => setBiometricAvailable(avail));
     const configured = isBiometricConfigured();
     setHasBiometrics(configured);
+    if (configured) {
+      const t = setTimeout(() => {
+        handleBiometricUnlock();
+      }, 350);
+      return () => clearTimeout(t);
+    }
   }, []);
 
   const handleBiometricUnlock = async () => {

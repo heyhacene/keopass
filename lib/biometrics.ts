@@ -1,11 +1,32 @@
 /**
  * KEOPASS — BIOMETRICS & WEBAUTHN MANAGER
- * Support natif de l'authentification par empreinte digitale / Face ID / Windows Hello
+ * Support bi-moteur :
+ * 1. Moteur Natif Mobile (Android / iOS) via @capgo/capacitor-native-biometric & Android Keystore
+ * 2. Moteur Web / Extension Chrome via WebAuthn (PublicKeyCredential)
  */
 
-const STORAGE_KEY = 'keopass_biometrics_v1';
+import { Capacitor } from '@capacitor/core';
 
-// Convertit Buffer <-> Base64URL
+const NATIVE_SERVER_ID = 'fr.keo.pass';
+const NATIVE_STORAGE_KEY = 'keopass_native_bio_active_v1';
+const NATIVE_EMAIL_KEY = 'keopass_native_bio_email_v1';
+const WEBAUTHN_STORAGE_KEY = 'keopass_biometrics_v1';
+
+// Import dynamique sécurisé pour éviter toute évaluation SSR lors du build Next.js
+async function getNativeBiometric() {
+  if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+    try {
+      const module = await import('@capgo/capacitor-native-biometric');
+      return module.NativeBiometric;
+    } catch (e) {
+      console.warn('NativeBiometric non disponible sur ce système:', e);
+      return null;
+    }
+  }
+  return null;
+}
+
+// Convertit Buffer <-> Base64URL pour WebAuthn
 function bufferToBase64Url(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = new Uint8Array(buffer);
   let binary = '';
@@ -30,32 +51,55 @@ function getRelyingPartyId(): string | undefined {
   if (typeof window === 'undefined') return undefined;
   const hostname = window.location.hostname;
   if (!hostname || hostname === '' || hostname === 'localhost' || hostname === '127.0.0.1') {
-    // Omettre le rp.id pour que le navigateur / WebView utilise automatiquement son origine native sans validation de nom de domaine
     return undefined;
   }
   return hostname;
 }
 
-// Vérifie si l'appareil dispose du support WebAuthn / Biométrie
+/**
+ * Vérifie si l'appareil dispose d'un capteur biométrique (Empreinte digitale / Face ID / Windows Hello)
+ */
 export async function isBiometricAvailable(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  if (!window.PublicKeyCredential) return false;
 
+  // 1. Sur application Android / iOS (Capacitor natif)
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const NativeBiometric = await getNativeBiometric();
+      if (!NativeBiometric) return false;
+      const res = await NativeBiometric.isAvailable();
+      return Boolean(res && res.isAvailable);
+    } catch (err) {
+      console.warn('Erreur détection biométrie native:', err);
+      return false;
+    }
+  }
+
+  // 2. Sur navigateur Web / Extension Chrome (WebAuthn)
+  if (!window.PublicKeyCredential) return false;
   try {
     const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
     return Boolean(available);
   } catch (err) {
-    console.warn('Erreur détection biométrie:', err);
-    // Si la méthode rejette sur certains WebViews mobiles mais que PublicKeyCredential existe
+    console.warn('Erreur détection biométrie WebAuthn:', err);
     return true;
   }
 }
 
-// Vérifie si la biométrie est déjà activée sur cet appareil pour cet utilisateur
+/**
+ * Vérifie si la biométrie est déjà configurée et active pour l'utilisateur sur cet appareil
+ */
 export function isBiometricConfigured(): boolean {
   if (typeof window === 'undefined') return false;
+
+  // 1. Mobile natif
+  if (Capacitor.isNativePlatform()) {
+    return localStorage.getItem(NATIVE_STORAGE_KEY) === 'true';
+  }
+
+  // 2. Web / Extension
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(WEBAUTHN_STORAGE_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw);
     return Boolean(parsed && parsed.credentialId && parsed.encryptedPayload);
@@ -64,10 +108,18 @@ export function isBiometricConfigured(): boolean {
   }
 }
 
+/**
+ * Récupère l'email lié à la biométrie sur cet appareil
+ */
 export function getBiometricEmail(): string | null {
   if (typeof window === 'undefined') return null;
+
+  if (Capacitor.isNativePlatform()) {
+    return localStorage.getItem(NATIVE_EMAIL_KEY) || null;
+  }
+
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(WEBAUTHN_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return parsed?.email || null;
@@ -76,15 +128,63 @@ export function getBiometricEmail(): string | null {
   }
 }
 
-// Enregistre l'empreinte digitale pour KeoPass
-export async function enableBiometric(masterPassword: string, email: string): Promise<{ success: boolean; error?: string }> {
+/**
+ * Enregistre et active l'empreinte digitale pour KeoPass
+ */
+export async function enableBiometric(
+  masterPassword: string,
+  email: string
+): Promise<{ success: boolean; error?: string }> {
+  if (typeof window === 'undefined') {
+    return { success: false, error: 'Environnement non disponible' };
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+
+  // 1. Mobile Android / iOS Natif (Trousseau Keystore / Keychain matériel)
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const NativeBiometric = await getNativeBiometric();
+      if (!NativeBiometric) {
+        return { success: false, error: 'Module biométrique natif non disponible' };
+      }
+
+      // Demande confirmation biométrique lors de l'enregistrement initial
+      await NativeBiometric.verifyIdentity({
+        reason: 'Activez l’empreinte digitale pour KeoPass',
+        title: 'KeoPass — Enregistrement biométrique',
+        subtitle: 'Confirmez votre empreinte',
+        description: 'Posez votre doigt sur le capteur pour activer la connexion biométrique',
+      });
+
+      // Enregistre les identifiants de façon chiffrée dans le Keystore Android
+      await NativeBiometric.setCredentials({
+        username: cleanEmail,
+        password: masterPassword,
+        server: NATIVE_SERVER_ID,
+      });
+
+      localStorage.setItem(NATIVE_STORAGE_KEY, 'true');
+      localStorage.setItem(NATIVE_EMAIL_KEY, cleanEmail);
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Erreur activation biométrie native:', err);
+      const msg = err.message || '';
+      if (msg.includes('cancel') || msg.includes('Cancel') || msg.includes('annulé') || msg.includes('user cancelled')) {
+        return { success: false, error: 'Activation biométrique annulée.' };
+      }
+      return { success: false, error: msg || 'Impossible d’activer l’empreinte sur cet appareil.' };
+    }
+  }
+
+  // 2. Web / Extension Chrome via WebAuthn
   if (!window.PublicKeyCredential) {
     return { success: false, error: 'Biométrie non supportée sur ce navigateur' };
   }
 
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const cleanEmail = email.trim().toLowerCase();
     const userId = new TextEncoder().encode(cleanEmail);
     const rpId = getRelyingPartyId();
 
@@ -105,7 +205,7 @@ export async function enableBiometric(masterPassword: string, email: string): Pr
           { alg: -257, type: 'public-key' }, // RS256
         ],
         authenticatorSelection: {
-          authenticatorAttachment: 'platform', // Capteur de l'appareil (empreinte/face)
+          authenticatorAttachment: 'platform',
           userVerification: 'required',
         },
         timeout: 60000,
@@ -118,7 +218,7 @@ export async function enableBiometric(masterPassword: string, email: string): Pr
 
     const credIdBase64 = bufferToBase64Url(credential.rawId);
 
-    // Dériver une clé locale à partir de l'ID du credential pour sceller le mot de passe
+    // Dériver une clé locale à partir de l'ID du credential
     const enc = new TextEncoder();
     const rawKeyMaterial = await crypto.subtle.digest('SHA-256', enc.encode(credIdBase64 + ':' + cleanEmail));
     const sealedKey = await crypto.subtle.importKey(
@@ -143,16 +243,16 @@ export async function enableBiometric(masterPassword: string, email: string): Pr
     combined.set(new Uint8Array(cipherBuffer), iv.length);
 
     const record = {
-      credentialId: bufferToBase64Url(credential.rawId),
+      credentialId: credIdBase64,
       encryptedPayload: bufferToBase64Url(combined),
-      email: email.trim().toLowerCase(),
+      email: cleanEmail,
       createdAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    localStorage.setItem(WEBAUTHN_STORAGE_KEY, JSON.stringify(record));
     return { success: true };
   } catch (err: any) {
-    console.error('Erreur activation biométrie:', err);
+    console.error('Erreur activation biométrie WebAuthn:', err);
     if (err.name === 'NotAllowedError') {
       return { success: false, error: 'Autorisation biométrique refusée ou annulée.' };
     }
@@ -160,18 +260,65 @@ export async function enableBiometric(masterPassword: string, email: string): Pr
   }
 }
 
-// Déverrouille avec l'empreinte et renvoie le mot de passe maître déchiffré
-export async function authenticateBiometric(): Promise<{ success: boolean; masterPassword?: string; email?: string; error?: string }> {
+/**
+ * Déverrouille avec l'empreinte et renvoie le mot de passe maître déchiffré
+ */
+export async function authenticateBiometric(): Promise<{
+  success: boolean;
+  masterPassword?: string;
+  email?: string;
+  error?: string;
+}> {
   if (typeof window === 'undefined') return { success: false, error: 'Environnement non disponible' };
 
+  // 1. Mobile Android / iOS Natif
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const NativeBiometric = await getNativeBiometric();
+      if (!NativeBiometric) {
+        return { success: false, error: 'Module biométrique natif non disponible' };
+      }
+
+      // Invite native système Android (BiometricPrompt)
+      await NativeBiometric.verifyIdentity({
+        reason: 'Déverrouillez votre coffre KeoPass avec votre empreinte',
+        title: 'KeoPass — Déverrouillage',
+        subtitle: 'Identification biométrique',
+        description: 'Posez votre doigt sur le capteur',
+      });
+
+      // Récupération des identifiants depuis le Keystore Android
+      const credentials = await NativeBiometric.getCredentials({
+        server: NATIVE_SERVER_ID,
+      });
+
+      if (!credentials || !credentials.password) {
+        return { success: false, error: 'Aucun identifiant trouvé dans le trousseau sécurisé.' };
+      }
+
+      return {
+        success: true,
+        masterPassword: credentials.password,
+        email: credentials.username || localStorage.getItem(NATIVE_EMAIL_KEY) || undefined,
+      };
+    } catch (err: any) {
+      console.error('Erreur déverrouillage biométrique natif:', err);
+      const msg = err.message || '';
+      if (msg.includes('cancel') || msg.includes('Cancel') || msg.includes('annulé') || msg.includes('user cancelled')) {
+        return { success: false, error: 'Reconnaissance biométrique annulée.' };
+      }
+      return { success: false, error: msg || 'Échec de la reconnaissance biométrique.' };
+    }
+  }
+
+  // 2. Web / Extension Chrome via WebAuthn
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { success: false, error: 'Biométrie non configurée' };
+    const raw = localStorage.getItem(WEBAUTHN_STORAGE_KEY);
+    if (!raw) return { success: false, error: 'Biométrie non configurée sur cet appareil' };
 
     const record = JSON.parse(raw);
     const credentialIdBytes = base64UrlToBuffer(record.credentialId);
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-
     const rpId = getRelyingPartyId();
 
     const assertion = (await navigator.credentials.get({
@@ -219,7 +366,7 @@ export async function authenticateBiometric(): Promise<{ success: boolean; maste
 
     return { success: true, masterPassword, email };
   } catch (err: any) {
-    console.error('Erreur déverrouillage biométrique:', err);
+    console.error('Erreur déverrouillage biométrique WebAuthn:', err);
     if (err.name === 'NotAllowedError') {
       return { success: false, error: 'Reconnaissance biométrique annulée.' };
     }
@@ -227,9 +374,25 @@ export async function authenticateBiometric(): Promise<{ success: boolean; maste
   }
 }
 
-// Désactive l'empreinte digitale
-export function disableBiometric(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem(STORAGE_KEY);
+/**
+ * Désactive l'empreinte digitale pour KeoPass
+ */
+export async function disableBiometric(): Promise<void> {
+  if (typeof window === 'undefined') return;
+
+  if (Capacitor.isNativePlatform()) {
+    try {
+      const NativeBiometric = await getNativeBiometric();
+      if (NativeBiometric) {
+        await NativeBiometric.deleteCredentials({ server: NATIVE_SERVER_ID });
+      }
+    } catch (e) {
+      console.warn('Erreur suppression credentials native:', e);
+    }
+    localStorage.removeItem(NATIVE_STORAGE_KEY);
+    localStorage.removeItem(NATIVE_EMAIL_KEY);
+    return;
   }
+
+  localStorage.removeItem(WEBAUTHN_STORAGE_KEY);
 }
