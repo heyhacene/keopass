@@ -36,8 +36,10 @@ import {
   ExternalLink,
   Bot,
   Puzzle,
+  Keyboard,
 } from 'lucide-react';
 import { isBiometricAvailable, isBiometricConfigured } from '@/lib/biometrics';
+import { getAutofillStatus, openAutofillSettings } from '@/lib/autofillSync';
 
 type FilterCategory = 'all' | 'favorites' | 'login' | 'card' | 'note' | 'totp';
 
@@ -64,6 +66,9 @@ export default function HomePage() {
   const [enablingBio, setEnablingBio] = useState(false);
   const [bioSuccess, setBioSuccess] = useState(false);
 
+  // Bannière proposition saisie automatique au-dessus du clavier (comme Samsung Pass)
+  const [showAutofillBanner, setShowAutofillBanner] = useState(false);
+
   React.useEffect(() => {
     if (isUnlocked) {
       const configured = isBiometricConfigured();
@@ -72,6 +77,11 @@ export default function HomePage() {
           if (avail) setShowBioBanner(true);
         });
       }
+      getAutofillStatus().then((status) => {
+        if (status.supported && !status.isDefaultService) {
+          setShowAutofillBanner(true);
+        }
+      });
     }
   }, [isUnlocked]);
 
@@ -251,6 +261,51 @@ export default function HomePage() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {/* BANNIÈRE PROPOSITION SAISIE AUTOMATIQUE CLAVIER */}
+        {showAutofillBanner && (
+          <div className="mb-5 p-4 rounded-3xl bg-gradient-to-r from-blue-50 via-indigo-50 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-blue-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-blue-600/30">
+                <Keyboard className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                  <span>Remplissage automatique au-dessus du clavier</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                    Comme Samsung Pass
+                  </span>
+                </h4>
+                <p className="text-[11px] text-gray-600 dark:text-gray-300">
+                  Affichez vos suggestions de connexion directement au-dessus des touches dans toutes vos applications et navigateurs.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={async () => {
+                  await openAutofillSettings();
+                  setShowAutofillBanner(false);
+                }}
+                className="py-2 px-3.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-2xl transition flex items-center gap-1.5 shadow-sm shadow-blue-600/20"
+              >
+                <Keyboard className="w-3.5 h-3.5" />
+                <span>Activer</span>
+                <ExternalLink className="w-3 h-3 opacity-80" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAutofillBanner(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-xl transition"
+                title="Plus tard"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 

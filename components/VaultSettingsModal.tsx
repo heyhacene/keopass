@@ -26,6 +26,7 @@ import {
   Bot,
   ShieldAlert,
   Puzzle,
+  Keyboard,
 } from 'lucide-react';
 import {
   isBiometricAvailable,
@@ -33,6 +34,12 @@ import {
   enableBiometric,
   disableBiometric,
 } from '@/lib/biometrics';
+import {
+  getAutofillStatus,
+  openAutofillSettings,
+  syncVaultToAutofill,
+  AutofillStatus,
+} from '@/lib/autofillSync';
 
 interface VaultSettingsModalProps {
   isOpen: boolean;
@@ -61,6 +68,7 @@ export default function VaultSettingsModal({
     syncNow,
     masterPasswordAvailable,
     enableBiometricsWithCurrentSession,
+    items,
   } = useVault();
 
   const [biometricSupported, setBiometricSupported] = React.useState(false);
@@ -70,6 +78,10 @@ export default function VaultSettingsModal({
   const [showPasswordPrompt, setShowPasswordPrompt] = React.useState(false);
   const [confirmPassword, setConfirmPassword] = React.useState('');
 
+  const [autofillStatus, setAutofillStatus] = React.useState<AutofillStatus | null>(null);
+  const [autofillSyncing, setAutofillSyncing] = React.useState(false);
+  const [autofillMsg, setAutofillMsg] = React.useState<string | null>(null);
+
   React.useEffect(() => {
     if (!isOpen) return;
     isBiometricAvailable().then((avail) => setBiometricSupported(avail));
@@ -77,7 +89,30 @@ export default function VaultSettingsModal({
     setBiometricMsg(null);
     setShowPasswordPrompt(false);
     setConfirmPassword('');
+    getAutofillStatus().then((status) => setAutofillStatus(status));
   }, [isOpen]);
+
+  const handleOpenAutofillSettings = async () => {
+    await openAutofillSettings();
+    setTimeout(() => {
+      getAutofillStatus().then((status) => setAutofillStatus(status));
+    }, 2000);
+  };
+
+  const handleManualAutofillSync = async () => {
+    setAutofillSyncing(true);
+    setAutofillMsg(null);
+    try {
+      const count = await syncVaultToAutofill(items);
+      setAutofillMsg(`${count} identifiant(s) synchronisé(s) pour la saisie au clavier.`);
+      const status = await getAutofillStatus();
+      setAutofillStatus(status);
+    } catch (e: any) {
+      setAutofillMsg('Erreur lors de la synchronisation.');
+    } finally {
+      setAutofillSyncing(false);
+    }
+  };
 
   const handleToggleBiometric = async () => {
     setBiometricMsg(null);
@@ -297,6 +332,81 @@ export default function VaultSettingsModal({
                 </form>
               )}
             </div>
+
+          {/* SAISIE AUTOMATIQUE ANDROID (AUTOFILL & CLAVIER) */}
+          <div className="p-4 rounded-3xl bg-blue-50/70 dark:bg-blue-950/20 border border-blue-200/80 dark:border-blue-900/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-blue-600 text-white rounded-2xl shadow-xs">
+                  <Keyboard className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h4 className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white">
+                      Saisie Automatique Android
+                    </h4>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
+                      Au-dessus du clavier
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                    Comme Samsung Pass &amp; Google : suggestion en 1 clic au-dessus des touches
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* État du service */}
+            {autofillStatus?.isDefaultService ? (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-900/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                    KeoPass est votre service de saisie par défaut
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-bold">
+                  {autofillStatus.credentialCount} dispo(s)
+                </span>
+              </div>
+            ) : (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-900/50 space-y-2">
+                <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-snug">
+                  Pour que vos mots de passe s'affichent automatiquement au-dessus du clavier Samsung / Gboard dans vos applications et navigateurs, choisissez KeoPass dans les paramètres Android.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenAutofillSettings}
+                  className="w-full py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs"
+                >
+                  <Keyboard className="w-3.5 h-3.5" />
+                  <span>Activer dans les Paramètres Android</span>
+                  <ExternalLink className="w-3 h-3 opacity-80" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                Synchroniser le coffre déchiffré
+              </span>
+              <button
+                type="button"
+                onClick={handleManualAutofillSync}
+                disabled={autofillSyncing}
+                className="py-1.5 px-3 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-200 dark:border-slate-700 rounded-xl text-xs font-bold text-gray-700 dark:text-gray-200 transition flex items-center gap-1.5"
+              >
+                <RefreshCw className={`w-3 h-3 ${autofillSyncing ? 'animate-spin' : ''}`} />
+                <span>{autofillSyncing ? 'Synchronisation...' : 'Synchroniser'}</span>
+              </button>
+            </div>
+
+            {autofillMsg && (
+              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                {autofillMsg}
+              </p>
+            )}
+          </div>
 
           {/* VERROUILLAGE AUTOMATIQUE */}
           <div className="space-y-2">

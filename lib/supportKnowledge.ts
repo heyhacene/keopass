@@ -15,6 +15,44 @@ export interface SupportFAQ {
 
 export const SUPPORT_FAQS: SupportFAQ[] = [
   {
+    id: 'autofill-samsung-pass',
+    title: 'Saisie automatique au-dessus du clavier (comme Samsung Pass & Google)',
+    quickQuestion: 'Comment faire apparaître mes identifiants au-dessus du clavier comme Samsung Pass ?',
+    keywords: [
+      'samsung pass',
+      'samsung',
+      'clavier',
+      'remplissage',
+      'autofill',
+      'saisie automatique',
+      'pastille',
+      'barre',
+      'dessus du clavier',
+      'gboard',
+      'samsung keyboard',
+      'suggestions',
+      'remplir',
+    ],
+    answer: `### ⌨️ Remplissage automatique au-dessus du clavier (Android Autofill)
+
+KeoPass s'intègre directement au système Android pour proposer vos identifiants **au-dessus des touches de votre clavier** (Samsung Keyboard, Gboard, SwiftKey), exactement comme le fait **Samsung Pass** ou **Google** :
+
+1. **Comment l'activer sur votre téléphone Samsung / Android :**
+   * Rendez-vous dans les **Paramètres** de votre smartphone.
+   * Touchez **Gestion globale** ➔ **Mots de passe, clés d'accès et saisie automatique** (ou *Service de saisie automatique*).
+   * Sélectionnez **KeoPass** à la place de *Samsung Pass* ou *Google*.
+2. **Comment l'utiliser au quotidien :**
+   * Ouvrez n'importe quelle application (banque, réseaux sociaux, sites web dans Chrome).
+   * Dès que le clavier s'ouvre, votre identifiant apparaît sous forme de pastille au-dessus des touches.
+   * Touchez la pastille : l'identifiant et le mot de passe sont renseignés instantanément en 1 clic !
+3. **Sécurité :**
+   * Vos données restent chiffrées en local sur votre appareil dans le bac à sable protégé de l'application.`,
+    action: {
+      label: 'Ouvrir les Paramètres KeoPass',
+      type: 'open_settings',
+    },
+  },
+  {
     id: 'security-audit',
     title: 'Audit de santé & Détection des fuites de données (HaveIBeenPwned)',
     quickQuestion: 'Comment vérifier si mes mots de passe ont été piratés ou ont fuité ?',

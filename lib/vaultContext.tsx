@@ -5,6 +5,7 @@ import { VaultItem, VaultItemType, EncryptedVaultItem } from '@/types/vault';
 import { deriveKeys, encryptData, decryptData } from '@/lib/crypto';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { enableBiometric, disableBiometric } from '@/lib/biometrics';
+import { syncVaultToAutofill, clearAutofillCache } from '@/lib/autofillSync';
 
 interface VaultContextType {
   isUnlocked: boolean;
@@ -72,6 +73,13 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     }
   }, []);
+
+  // Synchronisation automatique en tâche de fond vers la saisie automatique Android
+  useEffect(() => {
+    if (isUnlocked && items.length > 0) {
+      syncVaultToAutofill(items);
+    }
+  }, [isUnlocked, items]);
 
   // Réinitialisation du minuteur de verrouillage automatique à chaque interaction
   const resetAutoLockTimer = useCallback(() => {
@@ -406,6 +414,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(LOCAL_STORAGE_CONFIG_KEY);
     localStorage.removeItem(LOCAL_STORAGE_VAULT_KEY);
     disableBiometric();
+    clearAutofillCache();
     lockVault();
     setIsConfigured(false);
     setUserEmail('');
