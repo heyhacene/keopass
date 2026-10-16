@@ -115,17 +115,20 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: success()
         with:
-          tag_name: android-apk-latest
-          name: "KeoPass Android APK (Dernière version)"
+          tag_name: v1.0.0-build.${{ github.run_number }}
+          name: "KeoPass v1.0.0 (Build ${{ github.run_number }})"
           body: |
             ### 📱 Téléchargement KeoPass pour Android
             Téléchargez le fichier `KeoPass.apk` ci-dessous directement sur votre smartphone pour installer l'application.
+            - Version : v1.0.0 (Build ${{ github.run_number }})
+            - Déverrouillage par empreinte digitale / biométrie
             - Signature cryptographique Release officielle (v1, v2, v3)
             - Chiffrement Zero-Knowledge AES-256
             - Synchronisation Supabase intégrée
             - Coffre-fort de mots de passe, cartes et notes
           files: |
             KeoPass.apk
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
