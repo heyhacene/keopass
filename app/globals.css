@@ -14,12 +14,26 @@
   --background-end-rgb: 2, 6, 23;
 }
 
+html,
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Masquer la barre de défilement tout en permettant le défilement tactile fluide */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Scrollbar discrète */

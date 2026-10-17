@@ -63,7 +63,7 @@ export default function Navbar({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 transition-colors w-full max-w-full overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
         {/* LOGO & TITRE ÉPURÉ */}
         <div className="flex items-center gap-2.5 shrink-0">
@@ -75,7 +75,7 @@ export default function Navbar({
               <h1 className="font-extrabold text-base tracking-tight text-gray-900 dark:text-white">
                 KeoPass
               </h1>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-vault-50 dark:bg-vault-950/80 text-vault-600 dark:text-vault-400 border border-vault-200/50 dark:border-vault-800/40">
+              <span className="hidden xs:inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-vault-50 dark:bg-vault-950/80 text-vault-600 dark:text-vault-400 border border-vault-200/50 dark:border-vault-800/40">
                 Zero-Knowledge
               </span>
             </div>

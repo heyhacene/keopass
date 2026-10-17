@@ -206,7 +206,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 transition-colors w-full max-w-full overflow-x-hidden">
       <Navbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -221,7 +221,7 @@ export default function HomePage() {
         onToggleDarkMode={toggleDarkMode}
       />
 
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 min-w-0 max-w-full overflow-x-hidden">
         {/* BANNIÈRE COMPACTE DE RECOMMANDATION CONFIGURATION */}
         {(showBioBanner || showAutofillBanner) && (
           <div className="mb-5 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-vault-50/80 via-blue-50/60 to-white dark:from-slate-800 dark:via-slate-800 dark:to-slate-850 border border-vault-200/70 dark:border-slate-700 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
@@ -296,7 +296,7 @@ export default function HomePage() {
         </div>
 
         {/* DISPOSITION 2 COLONNES (SIDEBAR + LISTE) SUR DESKTOP */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 min-w-0 max-w-full">
           {/* SIDEBAR NAVIGATION (DESKTOP) */}
           <aside className="hidden md:block md:col-span-1 space-y-2">
             <div className="bg-white dark:bg-slate-800 rounded-3xl p-3 border border-gray-100 dark:border-slate-750 shadow-xs space-y-1">
@@ -435,13 +435,13 @@ export default function HomePage() {
           </aside>
 
           {/* CONTENU PRINCIPAL */}
-          <div className="col-span-1 md:col-span-3 space-y-4">
-            {/* PILLS CATÉGORIES SUR MOBILE */}
-            <div className="md:hidden flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <div className="col-span-1 md:col-span-3 space-y-4 min-w-0 max-w-full">
+            {/* PILLS CATÉGORIES SUR MOBILE (Défilement horizontal autonome et fluide) */}
+            <div className="md:hidden flex items-center gap-1.5 overflow-x-auto overscroll-x-contain touch-pan-x pb-2 pt-0.5 text-xs no-scrollbar w-full max-w-full -mx-4 px-4 scroll-smooth">
               <button
                 type="button"
                 onClick={() => setActiveCategory('all')}
-                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
                   activeCategory === 'all'
                     ? 'bg-vault-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
@@ -452,7 +452,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('favorites')}
-                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
                   activeCategory === 'favorites'
                     ? 'bg-amber-500 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
@@ -463,7 +463,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('login')}
-                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
                   activeCategory === 'login'
                     ? 'bg-vault-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
@@ -474,7 +474,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('card')}
-                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
                   activeCategory === 'card'
                     ? 'bg-amber-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
@@ -485,13 +485,24 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => setActiveCategory('note')}
-                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap transition ${
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
                   activeCategory === 'note'
                     ? 'bg-purple-600 text-white shadow-xs'
                     : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
                 }`}
               >
                 Notes ({counts.note})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveCategory('totp')}
+                className={`px-3 py-1.5 rounded-full font-bold whitespace-nowrap shrink-0 transition ${
+                  activeCategory === 'totp'
+                    ? 'bg-shield-600 text-white shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-slate-750'
+                }`}
+              >
+                Codes 2FA ({counts.totp})
               </button>
             </div>
 

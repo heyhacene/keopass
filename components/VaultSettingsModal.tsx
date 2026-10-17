@@ -40,6 +40,7 @@ import {
   syncVaultToAutofill,
   AutofillStatus,
 } from '@/lib/autofillSync';
+import { fetchLatestKeoPassApk, LatestApkRelease } from '@/lib/apkUpdate';
 
 interface VaultSettingsModalProps {
   isOpen: boolean;
@@ -81,6 +82,7 @@ export default function VaultSettingsModal({
   const [autofillStatus, setAutofillStatus] = React.useState<AutofillStatus | null>(null);
   const [autofillSyncing, setAutofillSyncing] = React.useState(false);
   const [autofillMsg, setAutofillMsg] = React.useState<string | null>(null);
+  const [latestApk, setLatestApk] = React.useState<LatestApkRelease | null>(null);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -90,6 +92,7 @@ export default function VaultSettingsModal({
     setShowPasswordPrompt(false);
     setConfirmPassword('');
     getAutofillStatus().then((status) => setAutofillStatus(status));
+    fetchLatestKeoPassApk().then((apk) => setLatestApk(apk));
   }, [isOpen]);
 
   const handleOpenAutofillSettings = async () => {
@@ -666,13 +669,17 @@ export default function VaultSettingsModal({
 
             <div className="space-y-2">
               <a
-                href="https://github.com/heyhacene/keopass/releases/latest/download/KeoPass.apk"
+                href={latestApk ? latestApk.downloadUrl : "https://github.com/heyhacene/keopass/releases/latest"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-3 rounded-2xl bg-vault-600 hover:bg-vault-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
               >
                 <Download className="w-4 h-4" />
-                <span>Télécharger le dernier APK KeoPass</span>
+                <span>
+                  {latestApk
+                    ? `Télécharger ${latestApk.filename}`
+                    : 'Télécharger le dernier APK KeoPass'}
+                </span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-80" />
               </a>
 
