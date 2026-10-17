@@ -6,7 +6,7 @@ export interface LatestApkRelease {
   sizeBytes: number;
 }
 
-export const DEFAULT_KEOPASS_BUILD = process.env.NEXT_PUBLIC_BUILD_NUMBER || '28';
+export const DEFAULT_KEOPASS_BUILD = process.env.NEXT_PUBLIC_BUILD_NUMBER || '29';
 
 export function getDirectKeoPassApkUrl(buildNumber: string = DEFAULT_KEOPASS_BUILD): string {
   return `https://github.com/heyhacene/keopass/releases/download/v1.0.0-build.${buildNumber}/KeoPass-Build-${buildNumber}.apk`;

@@ -95,7 +95,7 @@ export default function Navbar({
         )}
 
         {/* BANDEAU SUPÉRIEUR D'ACTIONS (GLISSE FLUIDEMENT SUR MOBILE SANS DÉPLACER L'ÉCRAN) */}
-        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar scroll-smooth shrink min-w-0 py-1 pl-1 pr-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto overscroll-x-contain no-scrollbar scroll-smooth shrink min-w-0 py-1 pl-1 pr-1">
           {/* BOUTON PRINCIPAL + NOUVEAU */}
           {isUnlocked && (
             <button
@@ -105,7 +105,7 @@ export default function Navbar({
               title="Ajouter un mot de passe ou une carte"
             >
               <Plus className="w-4 h-4" />
-              <span className="hidden xs:inline">Nouveau</span>
+              <span className="hidden sm:inline">Nouveau</span>
             </button>
           )}
 
@@ -150,9 +150,9 @@ export default function Navbar({
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isToolsOpen ? 'rotate-180' : ''}`} />
               </button>
 
-              {/* POPUP DU MENU OUTILS */}
+              {/* POPUP DU MENU OUTILS (Fixe sur mobile pour ne jamais être rogné par l'overflow) */}
               {isToolsOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-700 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                <div className="fixed sm:absolute top-16 sm:top-full right-3 sm:right-0 mt-1 sm:mt-2 w-72 max-w-[calc(100vw-24px)] bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-700 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
                   <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-400">
                     Outils Avancés
                   </div>

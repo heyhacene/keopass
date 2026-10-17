@@ -677,6 +677,7 @@ export default function VaultSettingsModal({
                 href={latestApk ? latestApk.downloadUrl : getDirectKeoPassApkUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
+                download
                 className="w-full py-2.5 px-3 rounded-2xl bg-vault-600 hover:bg-vault-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
               >
                 <Download className="w-4 h-4" />
