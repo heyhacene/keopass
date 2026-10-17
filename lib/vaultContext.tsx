@@ -36,6 +36,90 @@ const VaultContext = createContext<VaultContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_VAULT_KEY = 'keopass_encrypted_items_v1';
 const LOCAL_STORAGE_CONFIG_KEY = 'keopass_config_v1';
+const SEEDED_APP_NOTES_KEY = 'keopass_seeded_app_notes_v1';
+
+const DEFAULT_APP_NOTES: VaultItem[] = [
+  {
+    id: '00000000-0000-4000-8000-000000000101',
+    type: 'note',
+    name: '🏠 Application Keo Family (Lien & Installation)',
+    folder: 'family',
+    favorite: true,
+    data: {
+      content: `🏠 Découvre Keo Family — L'application tout-en-un pour organiser la vie de famille !
+
+Keo Family regroupe au même endroit tout ce dont le foyer a besoin au quotidien :
+• 📅 Agenda familial partagé (avec import/export de rendez-vous .ics et Doctolib)
+• 🛒 Liste de courses intelligente classée par rayons + liste de tâches
+• 🍽️ Planning des menus de la semaine & carnet de recettes (avec import depuis n'importe quel site ou réseau social)
+• 🗂️ Coffre-fort de documents familiaux (pièces d'identité, mutuelle, livret de famille avec alertes d'expiration)
+• 💊 Suivi médical et traitements de la famille
+• 💬 Messagerie familiale avec sondages intégrés
+
+📲 Lien de téléchargement direct (Android APK) :
+https://github.com/heyhacene/keofamily/releases/latest/download/KeoFamily.apk
+
+🚀 Comment l'installer et l'utiliser :
+1. Clique sur le lien ci-dessus pour télécharger l'application.
+2. Ouvre le fichier téléchargé et autorise l'installation si ton téléphone le demande.
+3. Au premier lancement, entre simplement ton prénom pour créer ton espace familial, puis ajoute les membres de ton foyer dans l'onglet "Famille" !`,
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000102',
+    type: 'note',
+    name: '🎙️✨ Application Keo Note (Lien & Installation)',
+    folder: 'personal',
+    favorite: true,
+    data: {
+      content: `🎙️✨ Découvre Keo Note — Le bloc-notes vocal et intelligent propulsé par l'IA !
+
+Plus besoin de taper tes notes à la main : parle, et l'intelligence artificielle s'occupe du reste.
+• 🎤 Dictée vocale IA : enregistre une note vocale, Keo Note la retranscrit et la structure automatiquement (titre, résumé, points clés ou liste de courses/tâches à cocher).
+• 📝 Notes texte, listes d'actions interactives et second cerveau IA.
+• 📌 Organisation par étiquettes, épingles et recherche intelligente.
+• 📤 Partage en 1 clic par WhatsApp, SMS, Mail ou directement vers Keo Family.
+
+📲 Lien de téléchargement direct (Android APK) :
+https://github.com/heyhacene/keonote/releases/latest/download/KeoNote.apk
+
+🚀 Comment l'installer et l'utiliser :
+1. Clique sur le lien ci-dessus pour télécharger et installer l'application sur Android.
+2. Pour activer l'IA : va dans les Paramètres (icône engrenage en haut à droite) et colle ta clé API gratuite Google Gemini (disponible gratuitement sur https://aistudio.google.com).
+3. Appuie sur le bouton micro en bas de l'écran, dicte tes idées ou ta liste de courses, et laisse l'IA organiser ta note automatiquement !`,
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: '00000000-0000-4000-8000-000000000103',
+    type: 'note',
+    name: '🔐 Application KeoPass (Lien & Installation)',
+    folder: 'personal',
+    favorite: true,
+    data: {
+      content: `🔐 Découvre KeoPass — Ton coffre-fort de mots de passe sécurisé et 100 % privé !
+
+Fini les mots de passe oubliés ou notés sur des bouts de papier :
+• 🛡️ Chiffrement intégral : tous tes identifiants, mots de passe, cartes bancaires et notes secrètes sont chiffrés avec ton mot de passe maître.
+• 👆 Déverrouillage rapide par empreinte digitale / biométrie.
+• ⚡ Générateur de mots de passe ultra-robustes intégré, codes 2FA (TOTP) et audit de sécurité.
+• 🔄 Remplissage automatique Android et partage sécurisé par lien éphémère.
+
+📲 Lien de téléchargement direct (Android APK) :
+https://github.com/heyhacene/keopass/releases/latest/download/KeoPass.apk
+
+🚀 Comment l'installer et l'utiliser :
+1. Clique sur le lien ci-dessus pour télécharger et installer l'application sur Android.
+2. Lors de la première ouverture, choisis ton mot de passe maître (la seule clé qui déverrouille ton coffre) et active l'empreinte digitale.
+3. Appuie sur "+" pour enregistrer tes comptes, cartes ou notes secrètes et copie tes identifiants en un geste !`,
+    },
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 export function VaultProvider({ children }: { children: React.ReactNode }) {
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -228,6 +312,16 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
 
+      if (typeof window !== 'undefined' && !localStorage.getItem(SEEDED_APP_NOTES_KEY)) {
+        const existingIds = new Set(localItems.map((i) => i.id));
+        DEFAULT_APP_NOTES.forEach((note) => {
+          if (!existingIds.has(note.id)) {
+            localItems.push(note);
+          }
+        });
+        localStorage.setItem(SEEDED_APP_NOTES_KEY, '1');
+      }
+
       // 4. Fusionner : repérer les éléments locaux non présents sur le cloud pour les pousser
       const mergedMap = new Map<string, VaultItem>();
       const itemsToPushToCloud: VaultItem[] = [];
@@ -344,8 +438,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       } else {
         const existingLocal = localStorage.getItem(LOCAL_STORAGE_VAULT_KEY);
         if (!existingLocal) {
-          localStorage.setItem(LOCAL_STORAGE_VAULT_KEY, JSON.stringify([]));
-          setItems([]);
+          setItems(DEFAULT_APP_NOTES);
+          await persistEncryptedItems(DEFAULT_APP_NOTES);
+          localStorage.setItem(SEEDED_APP_NOTES_KEY, '1');
         }
       }
 
@@ -476,6 +571,21 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
             console.error('Erreur déchiffrement élément:', encItem.id, decErr);
           }
         }
+      }
+
+      if (!localStorage.getItem(SEEDED_APP_NOTES_KEY)) {
+        const existingIds = new Set(decryptedList.map((i) => i.id));
+        let added = false;
+        DEFAULT_APP_NOTES.forEach((note) => {
+          if (!existingIds.has(note.id)) {
+            decryptedList.unshift(note);
+            added = true;
+          }
+        });
+        if (added) {
+          await persistEncryptedItems(decryptedList);
+        }
+        localStorage.setItem(SEEDED_APP_NOTES_KEY, '1');
       }
 
       setItems(decryptedList);

@@ -936,13 +936,92 @@ export default function VaultItemModal({
               )}
 
               {itemType === 'note' && (
-                <div className="p-3 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">
-                    Contenu chiffré
-                  </span>
-                  <pre className="font-mono text-xs whitespace-pre-wrap text-gray-800 dark:text-gray-200">
-                    {noteContent}
-                  </pre>
+                <div className="space-y-3">
+                  <div className="p-3.5 bg-gray-50 dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] uppercase font-bold text-gray-400">
+                        Contenu de la note
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(noteContent, 'noteContent')}
+                          className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-[11px] font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition flex items-center gap-1"
+                        >
+                          {copiedField === 'noteContent' ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-vault-600" />
+                              <span className="text-vault-600">Copié !</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copier tout</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (typeof navigator !== 'undefined' && navigator.share) {
+                              try {
+                                await navigator.share({ title: name, text: noteContent });
+                                return;
+                              } catch {}
+                            }
+                            window.open(
+                              `https://wa.me/?text=${encodeURIComponent(noteContent)}`,
+                              '_blank'
+                            );
+                          }}
+                          className="px-2.5 py-1 rounded-xl bg-vault-600 hover:bg-vault-700 text-white text-[11px] font-bold transition flex items-center gap-1"
+                        >
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span>Envoyer</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-xs leading-relaxed whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                      {noteContent.split(/(https?:\/\/[^\s]+)/g).map((part, idx) =>
+                        /^https?:\/\//.test(part) ? (
+                          <a
+                            key={idx}
+                            href={part}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-vault-600 dark:text-vault-400 underline font-bold break-all hover:text-vault-700"
+                          >
+                            {part}
+                          </a>
+                        ) : (
+                          <React.Fragment key={idx}>{part}</React.Fragment>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* BOUTONS DE LIENS CLIQUABLES DÉTECTÉS DANS LA NOTE */}
+                  {Array.from(new Set(noteContent.match(/https?:\/\/[^\s]+/g) || [])).map(
+                    (detectedUrl, idx) => (
+                      <a
+                        key={idx}
+                        href={detectedUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 bg-vault-50/80 dark:bg-vault-950/40 hover:bg-vault-100/80 dark:hover:bg-vault-900/50 rounded-2xl border border-vault-200 dark:border-vault-800/60 flex items-center justify-between gap-2 transition"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] uppercase font-bold text-vault-700 dark:text-vault-300 block">
+                            🔗 Lien direct cliquable
+                          </span>
+                          <p className="text-xs font-bold text-vault-600 dark:text-vault-400 underline truncate">
+                            {detectedUrl}
+                          </p>
+                        </div>
+                        <ExternalLink className="w-4 h-4 text-vault-600 dark:text-vault-400 shrink-0" />
+                      </a>
+                    )
+                  )}
                 </div>
               )}
 
@@ -952,7 +1031,21 @@ export default function VaultItemModal({
                     Notes
                   </span>
                   <p className="text-xs text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                    {notes}
+                    {notes.split(/(https?:\/\/[^\s]+)/g).map((part, idx) =>
+                      /^https?:\/\//.test(part) ? (
+                        <a
+                          key={idx}
+                          href={part}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-vault-600 dark:text-vault-400 underline font-bold break-all"
+                        >
+                          {part}
+                        </a>
+                      ) : (
+                        <React.Fragment key={idx}>{part}</React.Fragment>
+                      )
+                    )}
                   </p>
                 </div>
               )}
