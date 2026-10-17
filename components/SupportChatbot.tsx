@@ -27,7 +27,7 @@ import {
   askGeminiAssistant,
   SupportAction,
 } from '@/lib/supportKnowledge';
-import { fetchLatestKeoPassApk } from '@/lib/apkUpdate';
+import { fetchLatestKeoPassApk, getDirectKeoPassApkUrl } from '@/lib/apkUpdate';
 
 interface Message {
   id: string;
@@ -147,7 +147,7 @@ Posez-moi vos questions ou choisissez l'un des sujets rapides ci-dessous :`,
       setIsOpen(false);
     } else if (action.type === 'open_download_apk') {
       fetchLatestKeoPassApk().then((apk) => {
-        const url = apk?.downloadUrl || action.url || 'https://github.com/heyhacene/keopass/releases/latest';
+        const url = apk?.downloadUrl || getDirectKeoPassApkUrl();
         window.open(url, '_blank', 'noopener,noreferrer');
       });
     } else if (action.url) {

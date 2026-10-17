@@ -40,7 +40,12 @@ import {
   syncVaultToAutofill,
   AutofillStatus,
 } from '@/lib/autofillSync';
-import { fetchLatestKeoPassApk, LatestApkRelease } from '@/lib/apkUpdate';
+import {
+  fetchLatestKeoPassApk,
+  getDirectKeoPassApkUrl,
+  getDirectKeoPassApkFilename,
+  LatestApkRelease,
+} from '@/lib/apkUpdate';
 
 interface VaultSettingsModalProps {
   isOpen: boolean;
@@ -669,7 +674,7 @@ export default function VaultSettingsModal({
 
             <div className="space-y-2">
               <a
-                href={latestApk ? latestApk.downloadUrl : "https://github.com/heyhacene/keopass/releases/latest"}
+                href={latestApk ? latestApk.downloadUrl : getDirectKeoPassApkUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-3 rounded-2xl bg-vault-600 hover:bg-vault-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs"
@@ -678,7 +683,7 @@ export default function VaultSettingsModal({
                 <span>
                   {latestApk
                     ? `Télécharger ${latestApk.filename}`
-                    : 'Télécharger le dernier APK KeoPass'}
+                    : `Télécharger ${getDirectKeoPassApkFilename()}`}
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-80" />
               </a>

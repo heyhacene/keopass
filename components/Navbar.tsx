@@ -63,22 +63,20 @@ export default function Navbar({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 transition-colors w-full max-w-full overflow-hidden">
-      <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
-        {/* LOGO & TITRE ÉPURÉ */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-vault-600 to-emerald-400 text-white flex items-center justify-center shadow-sm shadow-vault-500/25">
-            <ShieldCheck className="w-5 h-5" />
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-gray-100 dark:border-slate-800 transition-colors w-full">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2 sm:gap-3 min-w-0">
+        {/* LOGO & TITRE */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-2xl bg-gradient-to-tr from-vault-600 to-emerald-400 text-white flex items-center justify-center shadow-sm shadow-vault-500/25 shrink-0">
+            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <h1 className="font-extrabold text-base tracking-tight text-gray-900 dark:text-white">
-                KeoPass
-              </h1>
-              <span className="hidden xs:inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-vault-50 dark:bg-vault-950/80 text-vault-600 dark:text-vault-400 border border-vault-200/50 dark:border-vault-800/40">
-                Zero-Knowledge
-              </span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <h1 className="font-extrabold text-sm sm:text-base tracking-tight text-gray-900 dark:text-white shrink-0">
+              KeoPass
+            </h1>
+            <span className="hidden md:inline-flex text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-vault-50 dark:bg-vault-950/80 text-vault-600 dark:text-vault-400 border border-vault-200/50 dark:border-vault-800/40 shrink-0">
+              Zero-Knowledge
+            </span>
           </div>
         </div>
 
@@ -96,18 +94,30 @@ export default function Navbar({
           </div>
         )}
 
-        {/* ACTIONS PRINCIPALES & MENU GROUPÉ */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* BANDEAU SUPÉRIEUR D'ACTIONS (GLISSE FLUIDEMENT SUR MOBILE SANS DÉPLACER L'ÉCRAN) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto overscroll-x-contain touch-pan-x no-scrollbar scroll-smooth shrink min-w-0 py-1 pl-1 pr-1">
           {/* BOUTON PRINCIPAL + NOUVEAU */}
           {isUnlocked && (
             <button
               type="button"
               onClick={onOpenAddModal}
-              className="px-3 py-2 bg-vault-600 hover:bg-vault-700 text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-vault-600/30 active:scale-95"
+              className="px-2.5 sm:px-3 py-2 bg-vault-600 hover:bg-vault-700 text-white rounded-2xl text-xs font-bold transition flex items-center gap-1 shadow-sm shadow-vault-600/30 active:scale-95 shrink-0"
               title="Ajouter un mot de passe ou une carte"
             >
               <Plus className="w-4 h-4" />
-              <span>Nouveau</span>
+              <span className="hidden xs:inline">Nouveau</span>
+            </button>
+          )}
+
+          {/* PARAMÈTRES DU COFFRE (Placé stratégiquement pour être immédiatement accessible, sans être coincé à droite) */}
+          {isUnlocked && (
+            <button
+              type="button"
+              onClick={onOpenSettingsModal}
+              className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 border border-gray-200/60 dark:border-slate-700/60 rounded-2xl transition shrink-0"
+              title="Paramètres & Empreinte"
+            >
+              <Settings className="w-4 h-4" />
             </button>
           )}
 
@@ -115,7 +125,7 @@ export default function Navbar({
           <button
             type="button"
             onClick={onOpenGeneratorModal}
-            className="p-2 sm:px-3 sm:py-2 bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 border border-gray-200/60 dark:border-slate-700/60"
+            className="p-2 sm:px-3 sm:py-2 bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 border border-gray-200/60 dark:border-slate-700/60 shrink-0"
             title="Générateur de mot de passe"
           >
             <KeyRound className="w-4 h-4 text-vault-600 dark:text-vault-400" />
@@ -124,11 +134,11 @@ export default function Navbar({
 
           {/* MENU DÉROULANT ÉPURÉ "OUTILS & FONCTIONNALITÉS" */}
           {isUnlocked && (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative shrink-0" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsToolsOpen(!isToolsOpen)}
-                className={`p-2 sm:px-3 sm:py-2 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 border ${
+                className={`p-2 sm:px-3 sm:py-2 rounded-2xl text-xs font-bold transition flex items-center gap-1.5 border shrink-0 ${
                   isToolsOpen
                     ? 'bg-vault-50 dark:bg-slate-800 text-vault-700 dark:text-vault-300 border-vault-200 dark:border-slate-700'
                     : 'bg-gray-50 hover:bg-gray-100 dark:bg-slate-800 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 border-gray-200/60 dark:border-slate-700/60'
@@ -244,25 +254,13 @@ export default function Navbar({
           )}
 
           {/* SÉPARATEUR */}
-          <div className="h-5 w-px bg-gray-200 dark:bg-slate-700 mx-0.5" />
-
-          {/* PARAMÈTRES DU COFFRE */}
-          {isUnlocked && (
-            <button
-              type="button"
-              onClick={onOpenSettingsModal}
-              className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition"
-              title="Paramètres &amp; Empreinte"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          )}
+          <div className="h-5 w-px bg-gray-200 dark:bg-slate-700 mx-0.5 shrink-0" />
 
           {/* THÈME CLAIR / SOMBRE */}
           <button
             type="button"
             onClick={onToggleDarkMode}
-            className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition"
+            className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 rounded-2xl transition shrink-0"
             title="Changer de thème"
           >
             {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -273,7 +271,7 @@ export default function Navbar({
             <button
               type="button"
               onClick={lockVault}
-              className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-2xl transition"
+              className="p-2 text-red-500 hover:text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-2xl transition shrink-0"
               title="Verrouiller le coffre"
             >
               <Lock className="w-4 h-4" />
